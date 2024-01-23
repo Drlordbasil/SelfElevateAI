@@ -6,7 +6,7 @@ import ast
 import re
 
 class OpenAIHandler:
-    def __init__(self, model="gpt-3.5-turbo-1106"):
+    def __init__(self, model="gpt-3.5-turbo-1106"): #gpt4 def __init__(self, model="gpt-4-1106-preview"):
         self.client = OpenAI()
         self.model = model
 
