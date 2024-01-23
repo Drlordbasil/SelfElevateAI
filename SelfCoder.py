@@ -5,9 +5,10 @@ from openai import OpenAI
 import ast
 import re
 import json
-
+gpt4="gpt-4-1106-preview"
+gpt3="gpt-3.5-turbo-1106"
 class OpenAIHandler:
-    def __init__(self, model="gpt-3.5-turbo-1106"):
+    def __init__(self, model=gpt4):
         self.client = OpenAI()
         self.model = model
 
