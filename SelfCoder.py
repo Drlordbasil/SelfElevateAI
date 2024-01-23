@@ -6,6 +6,16 @@ import ast
 import re
 
 class OpenAIHandler:
+    """
+    A class representing an algorithm developer.
+
+    Attributes:
+        openai_handler: An instance of the OpenAIHandler class used for communication with the OpenAI API.
+
+    Methods:
+        __init__(self, openai_handler): Initializes a new instance of the AlgoDeveloper class.
+        develop_algo(self, algo_code=None, error_message=None): Develops or improves an AI algorithm based on the provided code and feedback.
+    """
     def __init__(self, model="gpt-3.5-turbo-1106"): #gpt4 def __init__(self, model="gpt-4-1106-preview"):
         self.client = OpenAI()
         self.model = model
