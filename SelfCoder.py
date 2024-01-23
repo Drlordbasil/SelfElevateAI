@@ -8,7 +8,7 @@ import json
 gpt4="gpt-4-1106-preview"
 gpt3="gpt-3.5-turbo-1106"
 class OpenAIHandler:
-    def __init__(self, model=gpt4):
+    def __init__(self, model=gpt4): # gpt4 or gpt3 based on what you want to spend.
         self.client = OpenAI()
         self.model = model
 
