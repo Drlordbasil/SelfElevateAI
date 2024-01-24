@@ -1,4 +1,3 @@
-
 import subprocess
 import logging
 import time
@@ -6,8 +5,10 @@ from openai import OpenAI
 import ast
 import re
 import json
-gpt4="gpt-4-1106-preview"
-gpt3="gpt-3.5-turbo-1106"
+
+gpt4 = "gpt-4-1106-preview"
+gpt3 = "gpt-3.5-turbo-1106"
+
 class OpenAIHandler:
     def __init__(self, model=gpt3):
         self.client = OpenAI()
@@ -30,7 +31,7 @@ class OpenAIHandler:
             )
             response_content = completion.choices[0].message.content
             logging.info("OpenAI Response Received:\n{}".format(response_content))
-            time.sleep(10)
+            time.sleep(10)  # Evaluate if this delay is necessary
             return response_content
         except Exception as e:
             logging.error("Failed to get response from OpenAI: {}".format(e))
@@ -66,7 +67,6 @@ class AlgoDeveloper:
                 "Directions for refinement (eliminate placeholders, expunge inline notes, and incorporate comprehensive, articulate logic):"
             )
         return system_message, user_message
-
 
 class AlgoTester:
     def __init__(self, openai_handler):
