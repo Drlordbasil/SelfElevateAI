@@ -1,3 +1,4 @@
+
 import subprocess
 import logging
 import time
@@ -8,7 +9,7 @@ import json
 gpt4="gpt-4-1106-preview"
 gpt3="gpt-3.5-turbo-1106"
 class OpenAIHandler:
-    def __init__(self, model=gpt4): # gpt4 or gpt3 based on what you want to spend.
+    def __init__(self, model=gpt3):
         self.client = OpenAI()
         self.model = model
 
@@ -52,12 +53,20 @@ class AlgoDeveloper:
 
     def _generate_messages(self, algo_code, error_message):
         if not algo_code:
-            system_message = "Develop a new AI algorithm based on organic learning principles, adhering to Python standards."
-            user_message = "Create an initial AI that learns like a stem cell within the Python coding environment."
+            system_message = "Initiate crafting of a novel AI model, originating from your unique conceptual framework."
+            user_message = "Construct a foundational AI entity capable of adaptive learning, akin to a 'stem cell', within the Python ecosystem. Ensure the code is devoid of inline commentary and placeholders."
         else:
-            system_message = "Improve the AI algorithm based on the following code and feedback, adhering to Python standards."
-            user_message = f"The current AI algorithm is:\n{algo_code}\nError encountered: {error_message}\nHow should the algorithm be improved?"
+            system_message = "Enhance the AI model by infusing it with authentic data sources. Incrementally enrich the dataset in each iteration. Refrain from utilizing fictitious or illustrative data references."
+            user_message = (
+                "!!! Implement robust model preservation and retrieval mechanisms for uninterrupted cognitive evolution. Exclude simulated outputs, focusing solely on genuine logical results !!!\n"
+                "Current model structure (ensure the integration of sophisticated error management and a cohesive main loop for operational harmony):\n"
+                f"{algo_code}\n"
+                "Encountered issues (enhance debugging visibility if absent):\n"
+                f"{error_message}\n"
+                "Directions for refinement (eliminate placeholders, expunge inline notes, and incorporate comprehensive, articulate logic):"
+            )
         return system_message, user_message
+
 
 class AlgoTester:
     def __init__(self, openai_handler):
@@ -109,19 +118,6 @@ class FileManager:
         with open(filename, 'w') as file:
             json.dump(conversation_history, file, indent=4)
             logging.info("Conversation history saved to {} successfully.".format(filename))
-class ModelAdapter:
-    def __init__(self, openai_handler):
-        self.openai_handler = openai_handler
-        self.success_count = 0
-        self.total_iterations = 0
-
-    def update_success_rate(self, test_result):
-        self.total_iterations += 1
-        if test_result:
-            self.success_count += 1
-        success_rate = self.success_count / self.total_iterations
-        self.openai_handler.adapt_model(success_rate)
-        logging.info(f"Model adaptation check. Success Rate: {success_rate:.2f}")
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
@@ -131,7 +127,7 @@ if __name__ == "__main__":
     
     initial_script = ""
     algo_code = initial_script
-    max_iterations = 100
+    max_iterations = 20
     error_message = None
     performance_metrics = {}
     conversation_history = []
@@ -157,7 +153,8 @@ if __name__ == "__main__":
                 conversation_history[-1]['error'] = feedback
         else:
             logging.error("Failed to develop a valid algorithm. Stopping the iterative process.")
-            break
+            continue
+        continue  # Reset the current iteration and start the next iteration.
 
     FileManager.save_script('final_algo_script.py', algo_code)
     FileManager.save_conversation_dataset('conversation_dataset.json', conversation_history)
