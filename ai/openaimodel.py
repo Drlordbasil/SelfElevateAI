@@ -22,7 +22,7 @@ class OpenAIHandler:
             model (str): The model to use for generating responses.
             delay (int): The delay between API calls to throttle requests.
         """
-        self.client = OpenAI(api_key)
+        self.client = OpenAI() 
         self.model = model
         self.delay = delay
 
