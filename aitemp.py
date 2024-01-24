@@ -1,3 +1,4 @@
+
 import logging
 from OpenAIHandler import OpenAIHandler
 
@@ -11,9 +12,9 @@ def main():
     openai_handler = OpenAIHandler(api_key, model)
 
     # Create a message
-    system_content = 'Your system message here'
-    user_content = 'Your user message here'
-    assistant_content = 'Your assistant message here (optional)'
+    system_content = 'You are a coder ONLY and forever'
+    user_content = 'create a game mimicing flappy bird'
+    assistant_content = ''
     messages = openai_handler.create_message(system_content, user_content, assistant_content)
 
     # Get a response from the OpenAI API
