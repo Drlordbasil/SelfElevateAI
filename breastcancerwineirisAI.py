@@ -5,19 +5,32 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 class QLearningModel:
-    def __init__(self, n_states, n_actions, learning_rate=0.01, gamma=0.9):
+    def __init__(self, n_states, n_actions, learning_rate=0.01, gamma=0.9, epsilon=1.0, decay_rate=0.005, good_state_action_pairs=None):
         self.q_table = np.zeros((n_states, n_actions))
         self.learning_rate = learning_rate
         self.gamma = gamma
+        self.epsilon = epsilon
+        self.decay_rate = decay_rate
+        self.state_action_frequency = np.zeros((n_states, n_actions))
+        self.good_state_action_pairs = good_state_action_pairs if good_state_action_pairs is not None else set()
 
     def choose_action(self, state):
-        return np.argmax(self.q_table[state, :])
+        if np.random.uniform(0, 1) < self.epsilon:
+            action = np.random.choice(len(self.q_table[state, :]))
+        else:
+            action = np.argmax(self.q_table[state, :])
+        return action
 
     def learn(self, state, action, reward, next_state):
+        self.state_action_frequency[state, action] += 1
+        adjusted_reward = reward + (0.5 / (1 + self.state_action_frequency[state, action])) + (0.3 if (state, action) in self.good_state_action_pairs else 0)
         predict = self.q_table[state, action]
-        target = reward + self.gamma * np.max(self.q_table[next_state, :])
-        self.q_table[state, action] += self.learning_rate * (target - predict)
+        target = adjusted_reward + self.gamma * np.max(self.q_table[next_state, :])
+        self.q_table[state, action] += self.learning_rate / (1 + self.state_action_frequency[state, action] * self.decay_rate) * (target - predict)
+        self.adjust_epsilon()
 
+    def adjust_epsilon(self):
+        self.epsilon = self.epsilon * (1 - self.decay_rate) if self.epsilon > 0.01 else 0.01
 def train_and_evaluate_model(X, y, model_name):
     try:
         scaler = StandardScaler()
