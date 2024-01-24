@@ -1393,3 +1393,320 @@ In this improved code:
 This improved AI algorithm and structure should be more robust, maintainable, and user-friendly.
 INFO:root:Python code validation passed.
 INFO:root:AI algorithm improvement found and validated.
+
+PS C:\Users\Antho> & C:/Users/Antho/AppData/Local/Programs/Python/Python311/python.exe c:/Users/Antho/OneDrive/Desktop/SelfCoder_v1.1.py
+INFO:root:Starting the iterative improvement process for the AI algorithm.
+INFO:root:Iteration 1: Developing and testing the algorithm.
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:root:OpenAI Response Received:
+import numpy as np
+import random
+
+class AdaptiveLearningAI:
+    def __init__(self, input_size, output_size):
+        self.input_size = input_size
+        self.output_size = output_size
+        self.weights = np.random.rand(input_size, output_size)
+        self.bias = np.random.rand(output_size)
+
+    def sigmoid(self, x):
+        return 1 / (1 + np.exp(-x))
+
+    def feedforward(self, input_data):
+        output = np.dot(input_data, self.weights) + self.bias
+        return self.sigmoid(output)
+
+    def train(self, input_data, target_output, learning_rate):
+        output = self.feedforward(input_data)
+        error = target_output - output
+        adjustment = np.dot(input_data.T, error * (output * (1 - output)))
+        self.weights += adjustment * learning_rate
+        self.bias += np.sum(error * (output * (1 - output))) * learning_rate
+
+# Example usage:
+input_data = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+target_output = np.array([[0], [1], [1], [0]])
+
+ai = AdaptiveLearningAI(2, 1)
+for _ in range(10000):
+    i = random.randint(0, 3)
+    ai.train(input_data[i], target_output[i], 0.1)
+
+print(ai.feedforward(np.array([0, 0])))
+print(ai.feedforward(np.array([0, 1])))
+print(ai.feedforward(np.array([1, 0])))
+print(ai.feedforward(np.array([1, 1])))
+
+ERROR:root:No valid Python code improvements found in the response.
+ERROR:root:Failed to develop a valid algorithm. Stopping the iterative process.
+INFO:root:Iteration 2: Developing and testing the algorithm.
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:root:OpenAI Response Received:
+Certainly! Below is a foundational AI model capable of adaptive learning, designed using Python and based on a 'stem cell' conceptual framework:
+
+```python
+import numpy as np
+
+class AdaptiveLearningAI:
+    def __init__(self, input_size, output_size):
+        self.weights = np.random.rand(input_size, output_size)
+        self.bias = np.random.rand(output_size)
+
+    def sigmoid(self, x):
+        return 1 / (1 + np.exp(-x))
+
+    def sigmoid_derivative(self, x):
+        return x * (1 - x)
+
+    def train(self, inputs, labels, epochs):
+        for _ in range(epochs):
+            output = self.think(inputs)
+            error = labels - output
+            adjustment = np.dot(inputs.T, error * self.sigmoid_derivative(output))
+            self.weights += adjustment
+
+    def think(self, inputs):
+        return self.sigmoid(np.dot(inputs, self.weights) + self.bias)   
+
+# Example usage
+input_data = np.array([[0, 0, 1], [1, 1, 1], [1, 0, 1], [0, 1, 1]])     
+output_labels = np.array([[0], [1], [1], [0]])
+
+adaptive_model = AdaptiveLearningAI(3, 1)
+adaptive_model.train(input_data, output_labels, 10000)
+
+new_input = np.array([[1, 0, 0]])
+predicted_output = adaptive_model.think(new_input)
+print(predicted_output)
+```
+
+This foundational AI model is based on a simple neural network with adaptive learning through the backpropagation algorithm. The `AdaptiveLearningAI` class initializes the weights and biases, defines the sigmoid activation function and its derivative, provides a training method to update the weights based on input and output data, and a thinking method to make predictions. The example usage demonstrates training the model with input-output data and making predictions.
+
+This adaptable AI model serves as a starting point for further development and expansion within the Python ecosystem.
+INFO:root:Python code validation passed.
+INFO:root:AI algorithm improvement found and validated.
+INFO:root:Algorithm Testing Success: [[0.99995676]]
+
+INFO:root:Algorithm successfully tested. Feedback: [[0.99995676]]
+
+INFO:root:Iteration 3: Developing and testing the algorithm.
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:root:OpenAI Response Received:
+To enhance the adaptive learning AI model, we can infuse it with authentic data sources, such as the Iris dataset, to enable it to learn and make predictions on real-world data. The Iris dataset is a well-known dataset in machine learning and consists of four features (sepal length, sepal width, petal length, petal width) of three species of iris flowers.   
+
+Here's the updated model structure with the incorporation of the Iris dataset for training and prediction:
+
+```python
+import numpy as np
+from sklearn import datasets
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+
+class AdaptiveLearningAI:
+    def __init__(self, input_size, output_size):
+        self.weights = np.random.rand(input_size, output_size)
+        self.bias = np.random.rand(output_size)
+
+    def sigmoid(self, x):
+        return 1 / (1 + np.exp(-x))
+
+    def sigmoid_derivative(self, x):
+        return x * (1 - x)
+
+    def train(self, inputs, labels, epochs):
+        for _ in range(epochs):
+            output = self.think(inputs)
+            error = labels - output
+            adjustment = np.dot(inputs.T, error * self.sigmoid_derivative(output))
+            self.weights += adjustment
+
+    def think(self, inputs):
+        return self.sigmoid(np.dot(inputs, self.weights) + self.bias)   
+
+# Load and preprocess the Iris dataset
+iris = datasets.load_iris()
+X = iris.data
+y = (iris.target != 0) * 1  # Convert the iris dataset to binary classification (0 or 1)
+
+# Standardize the features
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
+
+# Split the dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Initialize and train the adaptive model
+adaptive_model = AdaptiveLearningAI(input_size=X_train.shape[1], output_size=1)
+adaptive_model.train(X_train, y_train.reshape(-1, 1), epochs=10000)     
+
+# Make predictions on new input
+new_input = np.array([[5.1, 3.5, 1.4, 0.2]])  # Example new input from the Iris dataset
+new_input = scaler.transform(new_input)  # Standardize the new input    
+predicted_output = adaptive_model.think(new_input)
+print(predicted_output)
+```
+
+In this enhanced model, the Iris dataset is preprocessed, the features are standardized, and the dataset is split into training and testing sets. The adaptive learning AI model is then trained on the training set and used to make predictions on new standardized inputs.
+
+This integration with the Iris dataset brings real-world data into the model, allowing it to learn and make predictions based on authentic information. Additionally, the use of the appropriate libraries such as NumPy and scikit-learn enhances the model's capabilities by incorporating industry-standard tools for data manipulation and machine learning.        
+INFO:root:Python code validation passed.
+INFO:root:AI algorithm improvement found and validated.
+INFO:root:Algorithm Testing Success: [[7.50512511e-16]]
+
+INFO:root:Algorithm successfully tested. Feedback: [[7.50512511e-16]]
+
+INFO:root:Iteration 4: Developing and testing the algorithm.
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:root:OpenAI Response Received:
+To further enhance the model's cognitive evolution, I'll integrate authentic data sources and expand the training dataset. First, I'll acquire additional real-world data related to iris classification. Subsequently, I will integrate this data to enrich the model's training and validation process, thereby bettering its predictive accuracy.
+ERROR:root:No valid Python code improvements found in the response.
+INFO:root:Algorithm Testing Success: [[2.51759445e-15]]
+
+INFO:root:Algorithm successfully tested. Feedback: [[2.51759445e-15]]
+
+INFO:root:Iteration 5: Developing and testing the algorithm.
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:root:OpenAI Response Received:
+To further enhance the AdaptiveLearningAI model, I will incorporate additional authentic data sources and enrich its capabilities.
+
+One such data source is the Breast Cancer Wisconsin (Diagnostic) dataset. It contains features computed from a digitized image of a fine needle aspirate (FNA) of a breast mass. Each feature represents characteristics of the cell nuclei present in the image.
+
+First, I will import the breast cancer dataset and preprocess it using the same standard scaling as in the previous code snippet. Then, I will split the dataset into training and testing sets. After that, I'll initialize and train the adaptive model using this new dataset.
+
+Let's begin by integrating the breast cancer dataset into the model and enhancing its training with this additional authentic data source.      
+ERROR:root:No valid Python code improvements found in the response.
+INFO:root:Algorithm Testing Success: [[4.08119408e-18]]
+
+INFO:root:Algorithm successfully tested. Feedback: [[4.08119408e-18]]
+
+INFO:root:Algorithm script saved to final_algo_script.py successfully.
+INFO:root:Conversation history saved to conversation_dataset.json successfully.
+INFO:root:Iterative improvement process completed.
+INFO:root:Final performance metrics: {1: '[[0.99995676]]\n', 2: '[[7.50512511e-16]]\n', 3: '[[2.51759445e-15]]\n', 4: '[[4.08119408e-18]]\n'}   
+PS C:\Users\Antho> & C:/Users/Antho/AppData/Local/Programs/Python/Python311/python.exe c:/Users/Antho/OneDrive/Desktop/SelfCoder_v1.1.py        
+INFO:root:Starting the iterative improvement process for the AI algorithm.
+INFO:root:Iteration 1: Developing and testing the algorithm.
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:root:OpenAI Response Received:
+Certainly! Here's a simplified implementation of a foundational AI model using Python:
+
+```python
+import numpy as np
+
+class FoundationalAI:
+    def __init__(self, input_size, output_size):
+        self.weights = np.random.rand(input_size, output_size)
+        self.bias = np.random.rand(output_size)
+
+    def train(self, inputs, targets, learning_rate):
+        predicted = np.dot(inputs, self.weights) + self.bias
+        errors = targets - predicted
+        self.weights += learning_rate * np.dot(inputs.T, errors)        
+        self.bias += learning_rate * np.mean(errors, axis=0)
+
+    def predict(self, inputs):
+        return np.dot(inputs, self.weights) + self.bias
+```
+
+This foundational AI model uses a simple form of linear regression for prediction and updating weights based on the input data. It can be further expanded and optimized for more complex AI tasks.
+INFO:root:Python code validation passed.
+INFO:root:AI algorithm improvement found and validated.
+INFO:root:Algorithm Testing Success: 
+INFO:root:Algorithm successfully tested. Feedback: 
+INFO:root:Iteration 2: Developing and testing the algorithm.
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:root:OpenAI Response Received:
+To enhance the model's capabilities, I will first integrate a more sophisticated error management mechanism and refine the main loop for improved operational harmony. Additionally, I will infuse the model with authentic data sources to enrich its learning capabilities.
+
+For error management, I will incorporate exception handling to capture and handle any potential errors that may arise during training and prediction. Furthermore, I will refine the main loop to ensure that the training and prediction processes are effectively coordinated, resulting in a cohesive operational framework.
+
+I will also integrate authentic data sources to supplement the model's learning process. These data sources may include structured datasets relevant to the model's domain, such as real-world input-output examples or domain-specific knowledge bases. By infusing the model with authentic data, it will be able to learn and adapt to real-world scenarios, leading to more accurate and reliable predictions.
+
+With these enhancements, the model will be better equipped to handle errors, seamlessly iterate in a cohesive main loop, and learn from genuine, real-world data sources, enabling uninterrupted cognitive evolution.   
+ERROR:root:No valid Python code improvements found in the response.
+INFO:root:Algorithm Testing Success: 
+INFO:root:Algorithm successfully tested. Feedback: 
+INFO:root:Iteration 3: Developing and testing the algorithm.
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:root:OpenAI Response Received:
+To enhance the model, I will integrate authentic data from a legitimate source to improve its cognitive capabilities. By infusing the model with real-world data, we can improve its predictive accuracy and generalization. Additionally, I will include error handling and robust model preservation mechanisms to ensure that the model operates reliably and can be retrieved seamlessly for further enhancements.
+
+I'll start by integrating a dataset related to the model's domain to enrich its knowledge base and generally improve its functionality. The next essential step would be the implementation of comprehensive error handling to increase the model's fault tolerance and maintain operational harmony.
+
+The model preservation mechanism will ensure that the model's state can be saved and retrieved, facilitating uninterrupted cognitive evolution and allowing for the retention of vital knowledge obtained throughout the model's existence.
+
+Finally, I'll refine the main loop to establish a cohesive operational flow, making the model well-equipped to handle data processing, learning, and prediction tasks seamlessly.
+
+By infusing these enhancements, the model will be better equipped to handle real-world applications with improved accuracy and robustness.      
+ERROR:root:No valid Python code improvements found in the response.
+INFO:root:Algorithm Testing Success: 
+INFO:root:Algorithm successfully tested. Feedback: 
+INFO:root:Iteration 4: Developing and testing the algorithm.
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:root:OpenAI Response Received:
+To enhance the robustness and preservation mechanisms of the AI model, an improved approach is to incorporate error handling, data logging, and version control for model evolution. Additionally, implementing techniques to handle data drift and model decay will ensure the long-term cognitive evolution of the AI system.
+
+Here's an enhanced version of the model with added preservation and retrieval mechanisms:
+
+```python
+import numpy as np
+import logging
+import datetime
+
+class FoundationalAI:
+    def __init__(self, input_size, output_size):
+        self.weights = np.random.rand(input_size, output_size)
+        self.bias = np.random.rand(output_size)
+        self.version = 1  # Model version
+        self.last_trained = datetime.datetime.now()  # Timestamp of last training
+
+    def train(self, inputs, targets, learning_rate):
+        try:
+            predicted = np.dot(inputs, self.weights) + self.bias        
+            errors = targets - predicted
+            self.weights += learning_rate * np.dot(inputs.T, errors)    
+            self.bias += learning_rate * np.mean(errors, axis=0)        
+            self.last_trained = datetime.datetime.now()  # Update training timestamp
+            self.version += 1  # Increment model version
+            logging.info(f"Model trained successfully. Version: {self.version}, Timestamp: {self.last_trained}")
+        except Exception as e:
+            logging.error(f"Error occurred during training: {str(e)}")  
+
+    def predict(self, inputs):
+        try:
+            return np.dot(inputs, self.weights) + self.bias
+        except Exception as e:
+            logging.error(f"Error occurred during prediction: {str(e)}")
+            return None
+
+    def save_model(self, path):
+        try:
+            np.savez(path, weights=self.weights, bias=self.bias, version=self.version, last_trained=self.last_trained)
+            logging.info(f"Model saved to: {path}")
+        except Exception as e:
+            logging.error(f"Error occurred while saving model: {str(e)}")
+
+    @staticmethod
+    def load_model(path):
+        try:
+            data = np.load(path)
+            model = FoundationalAI(input_size=data['weights'].shape[0], output_size=data['weights'].shape[1])
+            model.weights = data['weights']
+            model.bias = data['bias']
+            model.version = data['version']
+            model.last_trained = data['last_trained']
+            logging.info(f"Model loaded from: {path}, Version: {model.version}, Last trained: {model.last_trained}")
+            return model
+        except Exception as e:
+            logging.error(f"Error occurred while loading model: {str(e)}")
+            return None
+```
+
+In this enhanced model, error handling is implemented for training and prediction methods. Additionally, logging statements are used to record important events such as training completion, model saving, and loading. The model also tracks version and last trained timestamp for preservation and retrieval.
+
+This approach ensures operational harmony and provides the necessary mechanisms for uninterrupted cognitive evolution and model preservation.   
+INFO:root:Python code validation passed.
+INFO:root:AI algorithm improvement found and validated.
+INFO:root:Algorithm Testing Success: 
+INFO:root:Algorithm successfully tested. Feedback: 
+INFO:root:Iteration 5: Developing and testing the algorithm.
