@@ -32,6 +32,6 @@ To use this framework:
 Clone the repository and install the required dependencies.
 
 ```bash
-git clone https://github.com/your-repository.git](https://github.com/Drlordbasil/SelfImprovAlgoBot/)https://github.com/Drlordbasil/SelfImprovAlgoBot/
+git clone https://github.com/Drlordbasil/SelfImprovAlgoBot/
 cd your-repository
 pip install -r requirements.txt
