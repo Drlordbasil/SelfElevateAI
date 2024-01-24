@@ -109,6 +109,19 @@ class FileManager:
         with open(filename, 'w') as file:
             json.dump(conversation_history, file, indent=4)
             logging.info("Conversation history saved to {} successfully.".format(filename))
+class ModelAdapter:
+    def __init__(self, openai_handler):
+        self.openai_handler = openai_handler
+        self.success_count = 0
+        self.total_iterations = 0
+
+    def update_success_rate(self, test_result):
+        self.total_iterations += 1
+        if test_result:
+            self.success_count += 1
+        success_rate = self.success_count / self.total_iterations
+        self.openai_handler.adapt_model(success_rate)
+        logging.info(f"Model adaptation check. Success Rate: {success_rate:.2f}")
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
