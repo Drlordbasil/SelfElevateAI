@@ -1,16 +1,16 @@
 import subprocess
 import logging
 import time
-from openai import OpenAI
 import ast
 import re
 import json
+from openai import OpenAI
 
 gpt4 = "gpt-4-1106-preview"
 gpt3 = "gpt-3.5-turbo-1106"
 
 class OpenAIHandler:
-    def __init__(self, model=gpt3):
+    def __init__(self, model=gpt4):
         self.client = OpenAI()
         self.model = model
 
@@ -59,23 +59,37 @@ class AlgoDeveloper:
 
     def _generate_messages(self, algo_code, error_message):
         if not algo_code:
-            system_message = "!!!GIVE IT A REAL PURPOSE!!!Initiate crafting of a novel AI model, originating from your unique conceptual framework. Use math based AI with NN and PPO/RL additions. Create a class for each functionality for a base, never include psuedocode. Include around 10 classes."
-            user_message = "Construct a foundational AI entity capable of adaptive learning, akin to a 'stem cell', within the Python ecosystem. Ensure the code is devoid of inline commentary and placeholders."
-        else:
-            system_message = "Enhance the AI model by infusing it with authentic data sources. Incrementally enrich the dataset in each iteration. Refrain from utilizing fictitious or illustrative data references."
+            system_message = (
+                "Create an AI model using mathematical principles, neural networks (NN), and Proximal Policy Optimization/Reinforcement Learning (PPO/RL). "
+                "Structure the model with distinct classes for each core functionality, aiming for a total of approximately 10 classes. "
+                "Ensure the model embodies a concrete purpose and aligns with the concept of a 'stem cell' capable of adaptive learning within the Python ecosystem. "
+                "The code should be free from pseudocode, inline commentary, and placeholders."
+            )
             user_message = (
-                "!!! Implement robust model preservation and retrieval mechanisms for uninterrupted cognitive evolution. Exclude simulated outputs, focusing solely on genuine logical results !!!\n"
-                "Current model structure (ensure the integration of sophisticated error management and a cohesive main loop for operational harmony):\n"
-                f"{algo_code}\n"
-                "Encountered issues (enhance debugging visibility if absent):\n"
-                f"{error_message}\n"
-                f"add a purpose for the AI"
-                "NEVER INCLUDE CODE WITH THE PREFIX OF #"
-                " Always include fully defined logic"
-                "never trunicate code"
-                "!!!THE PROGRAM YOU CREATE IS YOUR CHILD SO TAKE CARE OF YOUR KID!!!!!Directions for refinement (eliminate placeholders, expunge inline notes, and incorporate comprehensive, articulate logic):"
+                "Construct a foundational, adaptable AI entity akin to a 'stem cell'. "
+                "Utilize math-based AI principles, integrating NN and PPO/RL techniques. "
+                "Develop a clean, well-structured codebase with individual classes for distinct functionalities, avoiding any form of inline commentary or placeholders. "
+                "Focus on creating a practical, purpose-driven model."
+            )
+        else:
+            system_message = (
+                "Refine the AI model by integrating real, qualitative data sources. "
+                "Continuously enhance the model by incrementally enriching the dataset in each iteration. "
+                "Avoid the use of fictitious or illustrative data. "
+                "Focus on enhancing the model's ability to preserve and retrieve its state effectively, ensuring a logical, result-oriented output. "
+                "Address any existing issues in the model, especially in error management and maintaining a cohesive main loop for operational consistency. "
+                "Refine the model further by removing any placeholders or inline notes, and by ensuring the logic is comprehensive and fully articulated."
+            )
+            user_message = (
+                "Enhance the AI model by infusing it with authentic, quality data sources, incrementally improving with each iteration. "
+                "Implement robust mechanisms for model preservation and state retrieval, focusing on generating genuine, logical results. "
+                "Review the current model structure, ensuring sophisticated error management and a cohesive main loop are in place for smooth operation. "
+                f"Address the listed issues ({error_message}), improving debugging visibility if necessary. "
+                "Direct efforts towards refining the model by eliminating placeholders, avoiding inline notes, and ensuring the logic is comprehensive, well-articulated, and never truncated. "
+                "Remember, the program you create is akin to your child, so nurture and refine it with care and attention to detail."
             )
         return system_message, user_message
+
 
 class AlgoTester:
     def __init__(self, openai_handler):
@@ -114,19 +128,27 @@ class CodingUtils:
         matches = re.findall(pattern, markdown_text, re.DOTALL)
         python_code_blocks = [match.strip() for match in matches]
         return python_code_blocks[0] if python_code_blocks else ""
-
 class FileManager:
     @staticmethod
     def save_script(filename, content):
         with open(filename, 'w') as file:
             file.write(content)
-            logging.info("Algorithm script saved to {} successfully.".format(filename))
+            logging.info(f"Algorithm script saved to {filename} successfully.")
 
     @staticmethod
     def save_conversation_dataset(filename, conversation_history):
         with open(filename, 'w') as file:
-            json.dump(conversation_history, file, indent=4)
-            logging.info("Conversation history saved to {} successfully.".format(filename))
+            for entry in conversation_history:
+                # Format the entry for fine-tuning
+                formatted_entry = {
+                    "messages": [
+                        {"role": "system", "content": entry.get("system_message", "")},
+                        {"role": "user", "content": entry.get("user_message", "")},
+                        {"role": "assistant", "content": entry.get("assistant_message", "")}
+                    ]
+                }
+                file.write(json.dumps(formatted_entry) + '\n')
+            logging.info(f"Conversation history saved to {filename} successfully.")
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
@@ -136,7 +158,7 @@ if __name__ == "__main__":
     
     initial_script = ""
     algo_code = initial_script
-    max_iterations = 20
+    max_iterations = 5
     error_message = None
     performance_metrics = {}
     conversation_history = []
@@ -162,10 +184,11 @@ if __name__ == "__main__":
                 conversation_history[-1]['error'] = feedback
         else:
             logging.error("Failed to develop a valid algorithm. Stopping the iterative process.")
-            continue
-        continue  # Reset the current iteration and start the next iteration.
+            break
 
     FileManager.save_script('final_algo_script.py', algo_code)
     FileManager.save_conversation_dataset('conversation_dataset.json', conversation_history)
     logging.info("Iterative improvement process completed.")
     logging.info(f"Final performance metrics: {performance_metrics}")
+
+
