@@ -1,5 +1,8 @@
 # AI Algorithm Development and Testing Framework
 
+![image](https://github.com/Drlordbasil/SelfImprovAlgoBot/assets/126736516/2529ab29-3dbb-4057-8453-4c97be6097aa)
+
+
 ## Overview
 This project presents an automated framework for the development, testing, and improvement of AI algorithms using OpenAI's GPT models. It's designed to iteratively develop and refine AI algorithms based on feedback and error analysis.
 
