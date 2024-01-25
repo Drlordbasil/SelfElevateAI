@@ -47,14 +47,19 @@ class AlgoDeveloper:
         response = self.openai_handler.get_response(messages)
         improved_algo_code = CodingUtils.extract_python_code(response)
         if improved_algo_code and CodingUtils.is_code_valid(improved_algo_code):
-            logging.info("AI algorithm improvement found and validated.")
-            return improved_algo_code
-        logging.error("No valid Python code improvements found in the response.")
-        return algo_code
+            if len(improved_algo_code) > len(algo_code):
+                logging.info("AI algorithm improvement found and validated.")
+                return improved_algo_code
+            else:
+                logging.error("No valid Python code improvements found in the response.")
+                return algo_code  # revert to the previous best iteration
+        else:
+            logging.error("No valid Python code improvements found in the response.")
+            return algo_code
 
     def _generate_messages(self, algo_code, error_message):
         if not algo_code:
-            system_message = "!!!GIVE IT A REAL PURPOSE!!!Initiate crafting of a novel AI model, originating from your unique conceptual framework."
+            system_message = "!!!GIVE IT A REAL PURPOSE!!!Initiate crafting of a novel AI model, originating from your unique conceptual framework. Use math based AI with NN and PPO/RL additions. Create a class for each functionality for a base, never include psuedocode. Include around 10 classes."
             user_message = "Construct a foundational AI entity capable of adaptive learning, akin to a 'stem cell', within the Python ecosystem. Ensure the code is devoid of inline commentary and placeholders."
         else:
             system_message = "Enhance the AI model by infusing it with authentic data sources. Incrementally enrich the dataset in each iteration. Refrain from utilizing fictitious or illustrative data references."
@@ -65,6 +70,9 @@ class AlgoDeveloper:
                 "Encountered issues (enhance debugging visibility if absent):\n"
                 f"{error_message}\n"
                 f"add a purpose for the AI"
+                "NEVER INCLUDE CODE WITH THE PREFIX OF #"
+                " Always include fully defined logic"
+                "never trunicate code"
                 "!!!THE PROGRAM YOU CREATE IS YOUR CHILD SO TAKE CARE OF YOUR KID!!!!!Directions for refinement (eliminate placeholders, expunge inline notes, and incorporate comprehensive, articulate logic):"
             )
         return system_message, user_message
