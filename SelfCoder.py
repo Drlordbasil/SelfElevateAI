@@ -78,7 +78,7 @@ class AlgoDeveloper:
         self.categories = self._init_categories()
 
     def _init_categories(self):
-        # Define top 5 Python categories and their prompts
+        
         return {
             "Web Development": {
                 "initial": ("Create a basic web application using Flask or Django. Include routes, views, and templates.",
@@ -109,7 +109,71 @@ class AlgoDeveloper:
                             "Create a REST API for a simple application, using Flask or Django."),
                 "refinement": ("Enhance API security and implement rate limiting and data caching.",
                                "Improve your API with security features, rate limiting, and caching mechanisms.")
+            },
+            "Mobile App Development": {
+                "initial": ("Develop a basic mobile app using a cross-platform framework like Flutter or React Native.",
+                            "Create a simple mobile app with user interaction, using Flutter or React Native."),
+                "refinement": ("Improve the app's performance and add advanced features like push notifications.",
+                               "Enhance your mobile app with better performance and push notification functionality.")
+            },
+            "Game Development": {
+                "initial": ("Create a simple game using a game development framework like Pygame or Unity.",
+                            "Develop a basic game with user interaction, using Pygame or Unity."),
+                "refinement": ("Enhance the game with advanced graphics and interactive gameplay features.",
+                               "Improve your game with better graphics and more interactive gameplay elements.")
+            },
+            "Chatbot Development": {
+                "initial": ("Build a basic chatbot using a natural language processing library like Rasa or ChatterBot.",
+                            "Create a simple chatbot with conversational capabilities, using Rasa or ChatterBot."),
+                "refinement": ("Incorporate advanced NLP features and improve the chatbot's conversational abilities.",
+                               "Enhance your chatbot with more sophisticated NLP capabilities and better conversational skills.")
+            },
+            
+            "Cybersecurity": {
+                "initial": ("Develop a basic cybersecurity program to detect common vulnerabilities.",
+                            "Create a program for identifying and mitigating standard security threats."),
+                "refinement": ("Incorporate advanced threat detection and response mechanisms.",
+                            "Upgrade your cybersecurity program to handle sophisticated cyber threats and incidents.")
+            },
+            "Blockchain Development": {
+                "initial": ("Build a simple blockchain application to record transactions.",
+                            "Develop a basic blockchain ledger for transaction recording."),
+                "refinement": ("Implement smart contract functionality and enhance security features.",
+                            "Expand your blockchain application to include smart contracts and improved security.")
+            },
+            "Internet of Things (IoT)": {
+                "initial": ("Create a basic IoT solution to monitor a single sensor data stream.",
+                            "Develop an IoT application for real-time sensor data monitoring."),
+                "refinement": ("Enhance the IoT solution with data analytics and remote control capabilities.",
+                            "Improve your IoT application to analyze sensor data and support remote operations.")
+            },
+            "Augmented Reality (AR)": {
+                "initial": ("Develop a simple AR application displaying interactive 3D objects.",
+                            "Create a basic AR app that can overlay 3D objects onto the real world."),
+                "refinement": ("Incorporate more complex AR features, like user interaction and dynamic content.",
+                            "Enhance your AR application with interactive elements and dynamic 3D content.")
+            },
+            "Virtual Reality (VR)": {
+                "initial": ("Build a basic VR environment with interactive elements.",
+                            "Develop a simple VR application with interactive features."),
+                "refinement": ("Incorporate advanced VR interactions and immersive experiences.",
+                            "Enhance your VR application with more sophisticated interactive and immersive features.")
+            },
+            "Natural Language Processing (NLP)": {
+                "initial": ("Create a basic NLP program for text analysis and sentiment detection.",
+                            "Develop a simple NLP application for text analysis and sentiment detection."),
+                "refinement": ("Implement advanced NLP techniques like named entity recognition and language translation.",
+                            "Enhance your NLP application with more sophisticated language processing capabilities.")
+            },
+            
+            "Cloud Computing": {
+                "initial": ("Set up a basic cloud environment for data storage and computing.",
+                            "Create a simple cloud-based solution for data handling and processing."),
+                "refinement": ("Expand cloud capabilities to include scalable architecture and advanced services.",
+                            "Enhance your cloud setup with scalability features and advanced cloud services.")
             }
+        
+
         }
 
     def develop_algo(self, algo_code=None, error_message=None):
@@ -118,7 +182,7 @@ class AlgoDeveloper:
         response = self.openai_handler.get_response(messages)
         improved_algo_code = CodingUtils.extract_python_code(response)
 
-        # Always append the interaction to the conversation history
+        
         conversation_history.append({
             "system_message": system_message,
             "user_message": user_message,
@@ -366,7 +430,7 @@ if __name__ == "__main__":
     adaptive_generator = AdaptiveCodeGenerator(openai_handler)
     initial_script = ""
     algo_code = initial_script
-    max_iterations = 5
+    max_iterations = 50
     error_message = None
     performance_metrics = {}
     conversation_history = []
