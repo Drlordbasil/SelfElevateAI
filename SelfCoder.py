@@ -1,16 +1,48 @@
 import subprocess
 import logging
+import sys
 import time
 import ast
 import re
 import json
 from openai import OpenAI
-
+import tkinter as tk
 gpt4 = "gpt-4-1106-preview"
 gpt3 = "gpt-3.5-turbo-1106"
 
+def submit():
+    selected_model = model_var.get()
+    # Perform actions based on the selected model
+    print("Selected Model:", selected_model)
+
+
+    root = tk.Tk()
+    root.title("Model Selection")
+
+    # Variable Definitions
+    gpt4 = gpt4
+    gpt3 = gpt3
+
+    # Create a drop-down menu
+    model_var = tk.StringVar(root)
+    model_var.set(gpt4)  # Set the default value
+
+    model_label = tk.Label(root, text="Select Model:")
+    model_label.pack()
+
+    model_dropdown = tk.OptionMenu(root, model_var, gpt4, gpt3)
+    model_dropdown.pack()
+
+    # Create a submit button
+    submit_button = tk.Button(root, text="Submit", command=submit)
+    submit_button.pack()
+
+    root.mainloop()
+    return selected_model,gpt4,gpt3
+
+
 class OpenAIHandler:
-    def __init__(self, model=gpt4):
+    def __init__(self, model=gpt3):
         self.client = OpenAI()
         self.model = model
 
@@ -60,22 +92,22 @@ class AlgoDeveloper:
     def _generate_messages(self, algo_code, error_message):
         if not algo_code:
             system_message = (
-                "Create an AI model using mathematical principles, neural networks (NN), and Proximal Policy Optimization/Reinforcement Learning (PPO/RL). "
+                "Create an AI model using mathematical principles, neural networks (NN), OR Proximal Policy Optimization/Reinforcement Learning (PPO/RL). "
                 "Structure the model with distinct classes for each core functionality, aiming for a total of approximately 10 classes. "
-                "Ensure the model embodies a concrete purpose and aligns with the concept of a 'stem cell' capable of adaptive learning within the Python ecosystem. "
+                "Ensure the model embodies a concrete purpose and aligns with the concept of a evolving AI capable of adaptive learning within the Python ecosystem. "
                 "The code should be free from pseudocode, inline commentary, and placeholders."
             )
             user_message = (
                 "Construct a foundational, adaptable AI entity akin to a 'stem cell'. "
                 "Utilize math-based AI principles, integrating NN and PPO/RL techniques. "
                 "Develop a clean, well-structured codebase with individual classes for distinct functionalities, avoiding any form of inline commentary or placeholders. "
-                "Focus on creating a practical, purpose-driven model."
+                "Focus on creating a practical, purpose-driven model. only send valid code, no chat. Only send code."
             )
         else:
             system_message = (
                 "Refine the AI model by integrating real, qualitative data sources. "
                 "Continuously enhance the model by incrementally enriching the dataset in each iteration. "
-                "Avoid the use of fictitious or illustrative data. "
+                "Avoid the use of fictitious or illustrative data. Make fully dynamic variables for the model. "
                 "Focus on enhancing the model's ability to preserve and retrieve its state effectively, ensuring a logical, result-oriented output. "
                 "Address any existing issues in the model, especially in error management and maintaining a cohesive main loop for operational consistency. "
                 "Refine the model further by removing any placeholders or inline notes, and by ensuring the logic is comprehensive and fully articulated."
@@ -91,25 +123,41 @@ class AlgoDeveloper:
         return system_message, user_message
 
 
+
+
 class AlgoTester:
     def __init__(self, openai_handler):
         self.openai_handler = openai_handler
 
     def test_algo(self, algo_code):
         try:
-            test_process = subprocess.Popen(["python", "-c", algo_code], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            test_process = subprocess.Popen(
+                [sys.executable, "-c", algo_code],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
             stdout, stderr = test_process.communicate(timeout=30)
+
             if stderr:
                 logging.error(f"Algorithm Testing Failed: {stderr}")
                 return False, stderr
+
+            suggestion = self.get_openai_suggestion(algo_code, stdout)
             logging.info(f"Algorithm Testing Success: {stdout}")
-            return True, stdout
+            return True, stdout, suggestion
         except subprocess.TimeoutExpired:
             logging.error("Algorithm testing timed out.")
-            return False, "Algorithm testing timed out."
+            return False, "Algorithm testing timed out.", None
         except Exception as e:
             logging.error(f"Error in testing algorithm: {e}")
-            return False, str(e)
+            return False, str(e), None
+
+    def get_openai_suggestion(self, code, output):
+        prompt = f"Review the following Python code and its output, then provide suggestions for improvement:\n\nCode:\n{code}\n\nOutput:\n{output}\n\nSuggestions:"
+        response = self.openai_handler.make_api_call(prompt)
+        return response if response else "No suggestions available."
+
 
 class CodingUtils:
     @staticmethod
