@@ -173,7 +173,8 @@ class AlgoTester:
 
     def get_openai_suggestion(self, code, output):
         prompt = f"Review the following Python code and its output, then provide suggestions for improvement:\n\nCode:\n{code}\n\nOutput:\n{output}\n\nSuggestions:"
-        response = self.openai_handler.make_api_call(prompt)
+        messages = self.openai_handler.create_message("You are a code debugger",prompt)
+        response = self.openai_handler.get_response(messages)
         return response if response else "No suggestions available."
 
 
@@ -294,6 +295,32 @@ def save_with_unique_name(base_name, content, file_type):
     else:
         raise ValueError("Unsupported file type")
     return file_name
+
+def preprocess_conversation_data(file_path):
+    preprocessed_data = ""
+
+    with open(file_path, 'r') as file:
+        for line in file:
+            try:
+                conversation_entry = json.loads(line)
+                system_msg = conversation_entry.get('system_message', '').strip()
+                user_msg = conversation_entry.get('user_message', '').strip()
+                assistant_msg = conversation_entry.get('assistant_message', '').strip()
+
+                # Format the conversation for the GPT model
+                if system_msg:
+                    preprocessed_data += f"System: {system_msg}\n"
+                if user_msg:
+                    preprocessed_data += f"User: {user_msg}\n"
+                if assistant_msg:
+                    preprocessed_data += f"Assistant: {assistant_msg}\n\n"
+            except json.JSONDecodeError as e:
+                logging.error(f"Error decoding JSON: {e}")
+
+    return preprocessed_data
+
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     openai_handler = OpenAIHandler()
@@ -336,6 +363,8 @@ if __name__ == "__main__":
     unique_convo_file = save_with_unique_name("conversation_dataset", conversation_history, "json")
     print(f"Algorithm script saved as: {unique_algo_file}")
     print(f"Conversation dataset saved as: {unique_convo_file}")
+    preprocessed_data = preprocess_conversation_data(unique_convo_file)
+
     logging.info("Iterative improvement process completed.")
     logging.info(f"Final performance metrics: {performance_metrics}")
 
