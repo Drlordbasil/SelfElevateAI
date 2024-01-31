@@ -11,39 +11,11 @@ import tkinter as tk
 gpt4 = "gpt-4-1106-preview"
 gpt3 = "gpt-3.5-turbo-1106"
 
-def submit():
-    selected_model = model_var.get()
-    # Perform actions based on the selected model
-    print("Selected Model:", selected_model)
 
-
-    root = tk.Tk()
-    root.title("Model Selection")
-
-    # Variable Definitions
-    gpt4 = gpt4
-    gpt3 = gpt3
-
-    # Create a drop-down menu
-    model_var = tk.StringVar(root)
-    model_var.set(gpt4)  # Set the default value
-
-    model_label = tk.Label(root, text="Select Model:")
-    model_label.pack()
-
-    model_dropdown = tk.OptionMenu(root, model_var, gpt4, gpt3)
-    model_dropdown.pack()
-
-    # Create a submit button
-    submit_button = tk.Button(root, text="Submit", command=submit)
-    submit_button.pack()
-
-    root.mainloop()
-    return selected_model,gpt4,gpt3
 
 
 class OpenAIHandler:
-    def __init__(self, model=gpt4):
+    def __init__(self, model=gpt3):
         self.client = OpenAI()
         self.model = model
 
