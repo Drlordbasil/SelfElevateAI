@@ -117,16 +117,25 @@ class AlgoDeveloper:
         messages = self.openai_handler.create_message(system_message, user_message)
         response = self.openai_handler.get_response(messages)
         improved_algo_code = CodingUtils.extract_python_code(response)
+
+        # Always append the interaction to the conversation history
+        conversation_history.append({
+            "system_message": system_message,
+            "user_message": user_message,
+            "assistant_message": improved_algo_code if improved_algo_code else "No improvement"
+        })
+
         if improved_algo_code and CodingUtils.is_code_valid(improved_algo_code):
             if len(improved_algo_code) > len(algo_code):
                 logging.info("AI algorithm improvement found and validated.")
                 return improved_algo_code
             else:
                 logging.error("No valid Python code improvements found in the response.")
-                return algo_code
         else:
             logging.error("No valid Python code improvements found in the response.")
-            return algo_code
+
+        return algo_code
+
 
     def _generate_messages(self, algo_code, error_message):
         category_key = random.choice(list(self.categories.keys()))
@@ -147,6 +156,9 @@ class AlgoTester:
         self.openai_handler = openai_handler
 
     def test_algo(self, algo_code):
+        system_message = "Testing algorithm code"
+        user_message = algo_code  # The code being tested is the user's 'input' in this context
+
         try:
             test_process = subprocess.Popen(
                 [sys.executable, "-c", algo_code],
@@ -158,24 +170,50 @@ class AlgoTester:
 
             if stderr:
                 logging.error(f"Algorithm Testing Failed: {stderr}")
+                assistant_message = f"Test Failed: {stderr}"
+                conversation_history.append({
+                    "system_message": system_message,
+                    "user_message": user_message,
+                    "assistant_message": assistant_message
+                })
                 return False, stderr, None  # Add a third return value (None) for the suggestion
 
             suggestion = self.get_openai_suggestion(algo_code, stdout)
+            assistant_message = f"Test Succeeded: {stdout}"
+            conversation_history.append({
+                "system_message": system_message,
+                "user_message": user_message,
+                "assistant_message": assistant_message
+            })
             logging.info(f"Algorithm Testing Success: {stdout}")
             return True, stdout, suggestion
         except subprocess.TimeoutExpired:
-            logging.error("Algorithm testing timed out.")
-            return False, "Algorithm testing timed out.", None
+            error_message = "Algorithm testing timed out."
+            logging.error(error_message)
+            assistant_message = f"Test Failed: {error_message}"
+            conversation_history.append({
+                "system_message": system_message,
+                "user_message": user_message,
+                "assistant_message": assistant_message
+            })
+            return False, error_message, None
         except Exception as e:
-            logging.error(f"Error in testing algorithm: {e}")
-            return False, str(e), None  # Make sure to return three values here too
-
+            error_message = f"Error in testing algorithm: {e}"
+            logging.error(error_message)
+            assistant_message = f"Test Failed: {error_message}"
+            conversation_history.append({
+                "system_message": system_message,
+                "user_message": user_message,
+                "assistant_message": assistant_message
+            })
+            return False, str(e), None
 
     def get_openai_suggestion(self, code, output):
         prompt = f"Review the following Python code and its output, then provide suggestions for improvement:\n\nCode:\n{code}\n\nOutput:\n{output}\n\nSuggestions:"
-        messages = self.openai_handler.create_message("You are a code debugger",prompt)
+        messages = self.openai_handler.create_message("You are a code debugger", prompt)
         response = self.openai_handler.get_response(messages)
         return response if response else "No suggestions available."
+
 
 
 class AdaptiveCodeGenerator:
@@ -320,7 +358,6 @@ def preprocess_conversation_data(file_path):
     return preprocessed_data
 
 
-
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     openai_handler = OpenAIHandler()
@@ -358,9 +395,9 @@ if __name__ == "__main__":
         else:
             logging.error("Failed to develop a valid algorithm. Stopping the iterative process.")
             break
-    
+
     unique_algo_file = save_with_unique_name("final_algo_script", algo_code, "py")
-    unique_convo_file = save_with_unique_name("conversation_dataset", conversation_history, "json")
+    unique_convo_file = save_with_unique_name("conversation_dataset", conversation_history, "jsonl")
     print(f"Algorithm script saved as: {unique_algo_file}")
     print(f"Conversation dataset saved as: {unique_convo_file}")
     preprocessed_data = preprocess_conversation_data(unique_convo_file)
