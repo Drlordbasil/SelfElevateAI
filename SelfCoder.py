@@ -1,3 +1,4 @@
+import random
 import subprocess
 import logging
 import sys
@@ -159,23 +160,89 @@ class AlgoTester:
         return response if response else "No suggestions available."
 
 
+class AdaptiveCodeGenerator:
+    def __init__(self, openai_handler, epochs=10):
+        self.openai_handler = openai_handler
+        self.epochs = epochs
+        self.successful_prompts = []
+        self.unsuccessful_prompts = []
+        self.learning_rate = 0.1
+
+    def train(self):
+        for epoch in range(self.epochs):
+            chosen_prompt = self.choose_prompt_strategy()
+            if chosen_prompt:
+                response = self.generate_code(chosen_prompt)
+                success = self.evaluate_success(response)
+                self.provide_feedback(chosen_prompt, success)
+                self.adjust_learning_rate(epoch)
+
+    def generate_code(self, prompt):
+        generated_code = self.openai_handler.make_api_call(prompt)
+        return generated_code
+
+    def provide_feedback(self, prompt, success):
+        if success:
+            self.successful_prompts.append(prompt)
+        else:
+            self.unsuccessful_prompts.append(prompt)
+
+    def choose_prompt_strategy(self):
+        if self.successful_prompts and random.random() < self.learning_rate:
+            return random.choice(self.successful_prompts)
+        elif self.unsuccessful_prompts:
+            return random.choice(self.unsuccessful_prompts)
+        return None
+
+    def adjust_learning_rate(self, epoch):
+        self.learning_rate += (1 / self.epochs) * (0.5 - random.random())
+
+    def evaluate_success(self, code):
+        try:
+            ast.parse(code) if ast.parse(code) else True    
+
+            return True
+        except SyntaxError:
+            return False
+
+
+
 class CodingUtils:
     @staticmethod
     def is_code_valid(code):
+        # Enhanced logic for code validation
         try:
             ast.parse(code)
             logging.info("Python code validation passed.")
-            return True
+            return True, "No syntax errors detected."
         except SyntaxError as e:
             logging.error(f"Syntax error in the generated code: {e}")
-            return False
+            return False, str(e)
 
     @staticmethod
     def extract_python_code(markdown_text):
         pattern = r"```python\n(.*?)```"
         matches = re.findall(pattern, markdown_text, re.DOTALL)
+        if not matches:
+            logging.warning("No Python code blocks found in the Markdown text.")
+            return ""
+
         python_code_blocks = [match.strip() for match in matches]
-        return python_code_blocks[0] if python_code_blocks else ""
+        if len(python_code_blocks) > 1:
+            logging.info("Multiple Python code blocks found. Returning the first block.")
+        return python_code_blocks[0]
+
+    @staticmethod
+    def format_python_code(code):
+        try:
+            import black
+            formatted_code = black.format_str(code, mode=black.FileMode())
+            return True, formatted_code
+        except Exception as e:
+            logging.error(f"Error formatting Python code: {e}")
+            return False, str(e)
+
+
 class FileManager:
     @staticmethod
     def save_script(filename, content):
@@ -203,7 +270,7 @@ if __name__ == "__main__":
     openai_handler = OpenAIHandler()
     algo_developer = AlgoDeveloper(openai_handler)
     algo_tester = AlgoTester(openai_handler)
-    
+    adaptive_generator = AdaptiveCodeGenerator(openai_handler)
     initial_script = ""
     algo_code = initial_script
     max_iterations = 5
@@ -226,6 +293,7 @@ if __name__ == "__main__":
                 logging.info(f"Algorithm successfully tested. Feedback: {feedback}")
                 performance_metrics[iteration] = feedback
                 conversation_history[-1]['feedback'] = feedback
+                #adaptive_generator.train()
             else:
                 logging.error(f"Algorithm testing failed. Error: {feedback}")
                 error_message = feedback
