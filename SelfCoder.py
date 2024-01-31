@@ -70,9 +70,47 @@ class OpenAIHandler:
             logging.error("Failed to get response from OpenAI: {}".format(e))
             return None
 
+
+
 class AlgoDeveloper:
     def __init__(self, openai_handler):
         self.openai_handler = openai_handler
+        self.categories = self._init_categories()
+
+    def _init_categories(self):
+        # Define top 5 Python categories and their prompts
+        return {
+            "Web Development": {
+                "initial": ("Create a basic web application using Flask or Django. Include routes, views, and templates.",
+                            "Develop a simple web app with user interaction, using Flask/Django."),
+                "refinement": ("Improve the web app's performance and user interface.",
+                               "Enhance your web app's UI/UX and optimize backend performance.")
+            },
+            "Data Science": {
+                "initial": ("Develop a data analysis script using pandas and numpy. Include data cleaning and basic analysis functions.",
+                            "Write a Python script for data cleaning and analysis using pandas."),
+                "refinement": ("Implement advanced data visualization and statistical analysis techniques.",
+                               "Expand your data script to include sophisticated visualization and deeper statistical insights.")
+            },
+            "Machine Learning": {
+                "initial": ("Create a machine learning model using scikit-learn. Start with data preprocessing and a simple model.",
+                            "Build a basic ML model with scikit-learn, focusing on preprocessing and model training."),
+                "refinement": ("Enhance the ML model's accuracy and efficiency. Experiment with different algorithms.",
+                               "Improve your ML model's performance by experimenting with various algorithms and tuning.")
+            },
+            "Automation": {
+                "initial": ("Develop a script to automate a routine task, such as file organization or web scraping.",
+                            "Write a Python script to automate a daily task, like organizing files or scraping web data."),
+                "refinement": ("Optimize the automation script for efficiency and error handling.",
+                               "Refine your automation script to handle errors gracefully and run more efficiently.")
+            },
+            "API Development": {
+                "initial": ("Build a RESTful API using Flask-RESTful or Django REST framework.",
+                            "Create a REST API for a simple application, using Flask or Django."),
+                "refinement": ("Enhance API security and implement rate limiting and data caching.",
+                               "Improve your API with security features, rate limiting, and caching mechanisms.")
+            }
+        }
 
     def develop_algo(self, algo_code=None, error_message=None):
         system_message, user_message = self._generate_messages(algo_code, error_message)
@@ -85,44 +123,22 @@ class AlgoDeveloper:
                 return improved_algo_code
             else:
                 logging.error("No valid Python code improvements found in the response.")
-                return algo_code  # revert to the previous best iteration
+                return algo_code
         else:
             logging.error("No valid Python code improvements found in the response.")
             return algo_code
 
     def _generate_messages(self, algo_code, error_message):
-        if not algo_code:
-            system_message = (
-                "Create an AI model using mathematical principles, neural networks (NN), OR Proximal Policy Optimization/Reinforcement Learning (PPO/RL). "
-                "Structure the model with distinct classes for each core functionality, aiming for a total of approximately 10 classes. "
-                "Ensure the model embodies a concrete purpose and aligns with the concept of a evolving AI capable of adaptive learning within the Python ecosystem. "
-                "The code should be free from pseudocode, inline commentary, and placeholders."
-            )
-            user_message = (
-                "Construct a foundational, adaptable AI entity akin to a 'stem cell'. "
-                "Utilize math-based AI principles, integrating NN and PPO/RL techniques. "
-                "Develop a clean, well-structured codebase with individual classes for distinct functionalities, avoiding any form of inline commentary or placeholders. "
-                "Focus on creating a practical, purpose-driven model. only send valid code, no chat. Only send code."
-            )
-        else:
-            system_message = (
-                "Refine the AI model by integrating real, qualitative data sources. "
-                "Continuously enhance the model by incrementally enriching the dataset in each iteration. "
-                "Avoid the use of fictitious or illustrative data. Make fully dynamic variables for the model. "
-                "Focus on enhancing the model's ability to preserve and retrieve its state effectively, ensuring a logical, result-oriented output. "
-                "Address any existing issues in the model, especially in error management and maintaining a cohesive main loop for operational consistency. "
-                "Refine the model further by removing any placeholders or inline notes, and by ensuring the logic is comprehensive and fully articulated."
-            )
-            user_message = (
-                "Enhance the AI model by infusing it with authentic, quality data sources, incrementally improving with each iteration. "
-                "Implement robust mechanisms for model preservation and state retrieval, focusing on generating genuine, logical results. "
-                "Review the current model structure, ensuring sophisticated error management and a cohesive main loop are in place for smooth operation. "
-                f"Address the listed issues ({error_message}), improving debugging visibility if necessary. "
-                "Direct efforts towards refining the model by eliminating placeholders, avoiding inline notes, and ensuring the logic is comprehensive, well-articulated, and never truncated. "
-                "Remember, the program you create is akin to your child, so nurture and refine it with care and attention to detail."
-            )
-        return system_message, user_message
+        category_key = random.choice(list(self.categories.keys()))
+        category = self.categories[category_key]
 
+        message_type = "initial" if not algo_code else "refinement"
+        system_message, user_message = category[message_type]
+
+        if message_type == "refinement":
+            user_message = user_message.format(error_message=error_message)
+
+        return system_message, user_message
 
 
 
@@ -288,7 +304,8 @@ if __name__ == "__main__":
         })
         algo_code = algo_developer.develop_algo(algo_code, error_message)
         if algo_code:
-            test_result, feedback = algo_tester.test_algo(algo_code)
+            test_result, feedback, suggestion = algo_tester.test_algo(algo_code)
+
             if test_result:
                 logging.info(f"Algorithm successfully tested. Feedback: {feedback}")
                 performance_metrics[iteration] = feedback
