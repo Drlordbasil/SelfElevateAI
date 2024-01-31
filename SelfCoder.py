@@ -397,7 +397,7 @@ if __name__ == "__main__":
             break
 
     unique_algo_file = save_with_unique_name("final_algo_script", algo_code, "py")
-    unique_convo_file = save_with_unique_name("conversation_dataset", conversation_history, "jsonl")
+    unique_convo_file = save_with_unique_name("conversation_dataset", conversation_history, "json")
     print(f"Algorithm script saved as: {unique_algo_file}")
     print(f"Conversation dataset saved as: {unique_convo_file}")
     preprocessed_data = preprocess_conversation_data(unique_convo_file)
