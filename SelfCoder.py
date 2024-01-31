@@ -43,7 +43,7 @@ def submit():
 
 
 class OpenAIHandler:
-    def __init__(self, model=gpt3):
+    def __init__(self, model=gpt4):
         self.client = OpenAI()
         self.model = model
 
@@ -86,6 +86,12 @@ class AlgoDeveloper:
                 "refinement": ("Improve the web app's performance and user interface.",
                                "Enhance your web app's UI/UX and optimize backend performance.")
             },
+            "yfinance RL NN": {"initial": ("Create a basic web application using Flask or Django. Include routes, views, and templates.",
+                            "Develop a simple web app with user interaction, using Flask/Django."),
+                "refinement": ("Improve the web app's performance and user interface.",
+                               "Enhance your web app's UI/UX and optimize backend performance.")
+            },
+            
             "Data Science": {
                 "initial": ("Develop a data analysis script using pandas and numpy. Include data cleaning and basic analysis functions.",
                             "Write a Python script for data cleaning and analysis using pandas."),
@@ -430,7 +436,8 @@ if __name__ == "__main__":
     adaptive_generator = AdaptiveCodeGenerator(openai_handler)
     initial_script = ""
     algo_code = initial_script
-    max_iterations = 50
+    user_iteration = int(input("Enter number of Iterations:"))
+    max_iterations = user_iteration
     error_message = None
     performance_metrics = {}
     conversation_history = []
