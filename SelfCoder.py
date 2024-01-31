@@ -158,7 +158,7 @@ class AlgoTester:
 
             if stderr:
                 logging.error(f"Algorithm Testing Failed: {stderr}")
-                return False, stderr
+                return False, stderr, None  # Add a third return value (None) for the suggestion
 
             suggestion = self.get_openai_suggestion(algo_code, stdout)
             logging.info(f"Algorithm Testing Success: {stdout}")
@@ -168,7 +168,8 @@ class AlgoTester:
             return False, "Algorithm testing timed out.", None
         except Exception as e:
             logging.error(f"Error in testing algorithm: {e}")
-            return False, str(e), None
+            return False, str(e), None  # Make sure to return three values here too
+
 
     def get_openai_suggestion(self, code, output):
         prompt = f"Review the following Python code and its output, then provide suggestions for improvement:\n\nCode:\n{code}\n\nOutput:\n{output}\n\nSuggestions:"
@@ -280,7 +281,19 @@ class FileManager:
                 }
                 file.write(json.dumps(formatted_entry) + '\n')
             logging.info(f"Conversation history saved to {filename} successfully.")
-
+def save_with_unique_name(base_name, content, file_type):
+    # Generate a unique timestamp
+    timestamp = int(time.time())
+    # Create a unique file name
+    file_name = f"{base_name}_{timestamp}.{file_type}"
+    # Save the file using FileManager
+    if file_type == 'py':
+        FileManager.save_script(file_name, content)
+    elif file_type == 'json':
+        FileManager.save_conversation_dataset(file_name, content)
+    else:
+        raise ValueError("Unsupported file type")
+    return file_name
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     openai_handler = OpenAIHandler()
@@ -318,9 +331,11 @@ if __name__ == "__main__":
         else:
             logging.error("Failed to develop a valid algorithm. Stopping the iterative process.")
             break
-
-    FileManager.save_script('final_algo_script.py', algo_code)
-    FileManager.save_conversation_dataset('conversation_dataset.json', conversation_history)
+    
+    unique_algo_file = save_with_unique_name("final_algo_script", algo_code, "py")
+    unique_convo_file = save_with_unique_name("conversation_dataset", conversation_history, "json")
+    print(f"Algorithm script saved as: {unique_algo_file}")
+    print(f"Conversation dataset saved as: {unique_convo_file}")
     logging.info("Iterative improvement process completed.")
     logging.info(f"Final performance metrics: {performance_metrics}")
 
