@@ -35,9 +35,4 @@ To use this framework:
 - Subprocess and Logging modules
 
 ## Installation
-Clone the repository and install the required dependencies.
-
-```bash
-git clone https://github.com/Drlordbasil/SelfImprovAlgoBot/
-cd your-repository
-pip install -r requirements.txt
+Clone the repository and install the required dependencies then run python on CMD
