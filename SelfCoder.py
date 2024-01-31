@@ -10,17 +10,18 @@ from openai import OpenAI
 import tkinter as tk
 gpt4 = "gpt-4-1106-preview"
 gpt3 = "gpt-3.5-turbo-1106"
-
+FineTune = "ft:gpt-3.5-turbo-0613:personal::8n9MKh7g"
 
 
 
 class OpenAIHandler:
-    def __init__(self, model=gpt3):
+    def __init__(self, model=FineTune):
         self.client = OpenAI()
         self.model = model
 
     def create_message(self, system_content, user_content, assistant_content=None):
         structured_messages = [
+            {"role": "system", "content": "You only send functioning logic and 0 chatter. You can only speak in valid robust code, which is your job."},
             {"role": "system", "content": system_content},
             {"role": "user", "content": user_content}
         ]
@@ -218,6 +219,7 @@ class AlgoTester:
                     "user_message": user_message,
                     "assistant_message": assistant_message
                 })
+                
                 return False, stderr, None  # Add a third return value (None) for the suggestion
 
             suggestion = self.get_openai_suggestion(algo_code, stdout)
@@ -408,8 +410,8 @@ if __name__ == "__main__":
     adaptive_generator = AdaptiveCodeGenerator(openai_handler)
     initial_script = ""
     algo_code = initial_script
-    user_iteration = int(input("Enter number of Iterations:"))
-    max_iterations = user_iteration
+    #user_iteration = int(input("Enter number of Iterations:"))
+    max_iterations = 5 #user_iteration
     error_message = None
     performance_metrics = {}
     conversation_history = []
@@ -435,9 +437,9 @@ if __name__ == "__main__":
                 logging.error(f"Algorithm testing failed. Error: {feedback}")
                 error_message = feedback
                 conversation_history[-1]['error'] = feedback
-        else:
-            logging.error("Failed to develop a valid algorithm. Stopping the iterative process.")
-            break
+        #else:
+            #logging.error("Failed to develop a valid algorithm. Stopping the iterative process.")
+            #break
 
     unique_algo_file = save_with_unique_name("final_algo_script", algo_code, "py")
     unique_convo_file = save_with_unique_name("conversation_dataset", conversation_history, "json")
