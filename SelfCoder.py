@@ -245,7 +245,7 @@ class AlgoTester:
 class CodingUtils:
     @staticmethod
     def is_code_valid(code, language):
-        # Code validation logic for different languages
+
         if language == "python":
             try:
                 ast.parse(code)
@@ -255,7 +255,6 @@ class CodingUtils:
                 logging.error(f"Syntax error in Python code: {e}")
                 return False, str(e)
         elif language == "javascript":
-            # JavaScript code validation using Node.js and Prettier
             try:
                 result = subprocess.check_output(["prettier", "--check", code], stderr=subprocess.STDOUT, text=True)
                 logging.info("JavaScript code validation passed.")
@@ -298,7 +297,7 @@ class CodingUtils:
             return False, str(e)
     @staticmethod
     def extract_javascript_code(markdown_text):
-        # Extract JavaScript code blocks from markdown text
+
         pattern = r"```javascript\n(.*?)```"
         matches = re.findall(pattern, markdown_text, re.DOTALL)
         if not matches:
@@ -308,7 +307,7 @@ class CodingUtils:
 
     @staticmethod
     def format_javascript_code(code):
-        # Format JavaScript code using Prettier
+
         try:
             formatted_code = subprocess.check_output(["prettier", "--write", code], stderr=subprocess.STDOUT, text=True)
             return True, formatted_code
@@ -318,7 +317,7 @@ class CodingUtils:
 
     @staticmethod
     def extract_html_code(markdown_text):
-        # Extract HTML code blocks from markdown text
+        
         pattern = r"```html\n(.*?)```"
         matches = re.findall(pattern, markdown_text, re.DOTALL)
         if not matches:
@@ -328,7 +327,7 @@ class CodingUtils:
 
     @staticmethod
     def format_html_code(code):
-        # Basic HTML formatting (placeholder for real formatter)
+        
         formatted_code = code.replace('>', '>\n').replace('<', '\n<')
         return True, formatted_code
 
@@ -337,9 +336,9 @@ class CodingUtils:
 class FileManager:
     @staticmethod
     def detect_language(content):
-        # Ensure content is a string
+        
         if isinstance(content, list):
-            content = '\n'.join(content)  # Join list elements if content is a list
+            content = '\n'.join(content)  
 
         first_line = content.split('\n', 1)[0]
         if "#lang=" in first_line:
@@ -372,8 +371,8 @@ class FileManager:
 def save_with_unique_name(base_name, content, file_type):
     # Generate a unique timestamp
     timestamp = int(time.time())
-    # Create a unique file name with the correct extension
-    file_name = f"{base_name}_{timestamp}.{file_type}"  # Add the file_type as extension
+    
+    file_name = f"{base_name}_{timestamp}.{file_type}"  
 
     # Handling different types of content
     if file_type == 'json':
