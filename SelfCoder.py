@@ -380,13 +380,17 @@ class CodingUtils:
 class FileManager:
     @staticmethod
     def detect_language(content):
-        # Detect language from the first line
+        # Ensure content is a string
+        if isinstance(content, list):
+            content = '\n'.join(content)  # Join list elements if content is a list
+
         first_line = content.split('\n', 1)[0]
         if "#lang=" in first_line:
             return first_line.split('=')[1].strip()
         elif "<!--lang=" in first_line:
             return first_line.split('=')[1].split('-->')[0].strip()
         return "unknown"
+
 
     @staticmethod
     def get_file_extension(language):
