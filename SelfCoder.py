@@ -53,17 +53,6 @@ class AlgoDeveloper:
     def _init_categories(self):
         
         return {
-            "Web Development": {
-                "initial": ("Create a basic web application using Flask or Django. Include routes, views, and templates.",
-                            "Develop a simple web app with user interaction, using Flask/Django."),
-                "refinement": ("Improve the web app's performance and user interface.",
-                               "Enhance your web app's UI/UX and optimize backend performance.")
-            },
-            "yfinance RL NN": {"initial": ("Create a basic web application using Flask or Django. Include routes, views, and templates.",
-                            "Develop a simple web app with user interaction, using Flask/Django."),
-                "refinement": ("Improve the web app's performance and user interface.",
-                               "Enhance your web app's UI/UX and optimize backend performance.")
-            },
             
             "Data Science": {
                 "initial": ("Develop a data analysis script using pandas and numpy. Include data cleaning and basic analysis functions.",
@@ -96,8 +85,8 @@ class AlgoDeveloper:
                                "Enhance your mobile app with better performance and push notification functionality.")
             },
             "Game Development": {
-                "initial": ("Create a simple game using a game development framework like Pygame or Unity.",
-                            "Develop a basic game with user interaction, using Pygame or Unity."),
+                "initial": ("Create a simple game using a game development framework like Pygame",
+                            "Develop a basic game with user interaction, using Pygame."),
                 "refinement": ("Enhance the game with advanced graphics and interactive gameplay features.",
                                "Improve your game with better graphics and more interactive gameplay elements.")
             },
@@ -126,18 +115,8 @@ class AlgoDeveloper:
                 "refinement": ("Enhance the IoT solution with data analytics and remote control capabilities.",
                             "Improve your IoT application to analyze sensor data and support remote operations.")
             },
-            "Augmented Reality (AR)": {
-                "initial": ("Develop a simple AR application displaying interactive 3D objects.",
-                            "Create a basic AR app that can overlay 3D objects onto the real world."),
-                "refinement": ("Incorporate more complex AR features, like user interaction and dynamic content.",
-                            "Enhance your AR application with interactive elements and dynamic 3D content.")
-            },
-            "Virtual Reality (VR)": {
-                "initial": ("Build a basic VR environment with interactive elements.",
-                            "Develop a simple VR application with interactive features."),
-                "refinement": ("Incorporate advanced VR interactions and immersive experiences.",
-                            "Enhance your VR application with more sophisticated interactive and immersive features.")
-            },
+
+
             "Natural Language Processing (NLP)": {
                 "initial": ("Create a basic NLP program for text analysis and sentiment detection.",
                             "Develop a simple NLP application for text analysis and sentiment detection."),
@@ -306,18 +285,37 @@ class AdaptiveCodeGenerator:
             return False
 
 
-
 class CodingUtils:
     @staticmethod
-    def is_code_valid(code):
-        # Enhanced logic for code validation
-        try:
-            ast.parse(code)
-            logging.info("Python code validation passed.")
-            return True, "No syntax errors detected."
-        except SyntaxError as e:
-            logging.error(f"Syntax error in the generated code: {e}")
-            return False, str(e)
+    def is_code_valid(code, language):
+        # Code validation logic for different languages
+        if language == "python":
+            try:
+                ast.parse(code)
+                logging.info("Python code validation passed.")
+                return True, "No syntax errors detected."
+            except SyntaxError as e:
+                logging.error(f"Syntax error in Python code: {e}")
+                return False, str(e)
+        elif language == "javascript":
+            # JavaScript code validation using Node.js and Prettier
+            try:
+                result = subprocess.check_output(["prettier", "--check", code], stderr=subprocess.STDOUT, text=True)
+                logging.info("JavaScript code validation passed.")
+                return True, "No syntax errors detected."
+            except subprocess.CalledProcessError as e:
+                logging.error(f"Syntax error in JavaScript code: {e.output}")
+                return False, str(e.output)
+        elif language == "html":
+            # Basic HTML validation logic
+            if "<" in code and ">" in code and "</" not in code:
+                logging.error("Missing closing HTML tags.")
+                return False, "Missing closing HTML tags."
+            logging.info("Basic HTML code validation passed.")
+            return True, "No obvious syntax errors detected."
+        else:
+            logging.error("Unsupported language for validation.")
+            return False, "Unsupported language."
 
     @staticmethod
     def extract_python_code(markdown_text):
@@ -341,41 +339,84 @@ class CodingUtils:
         except Exception as e:
             logging.error(f"Error formatting Python code: {e}")
             return False, str(e)
+    @staticmethod
+    def extract_javascript_code(markdown_text):
+        # Extract JavaScript code blocks from markdown text
+        pattern = r"```javascript\n(.*?)```"
+        matches = re.findall(pattern, markdown_text, re.DOTALL)
+        if not matches:
+            logging.warning("No JavaScript code blocks found.")
+            return ""
+        return "\n".join(matches).strip()
+
+    @staticmethod
+    def format_javascript_code(code):
+        # Format JavaScript code using Prettier
+        try:
+            formatted_code = subprocess.check_output(["prettier", "--write", code], stderr=subprocess.STDOUT, text=True)
+            return True, formatted_code
+        except subprocess.CalledProcessError as e:
+            logging.error(f"Error formatting JavaScript code: {e.output}")
+            return False, str(e.output)
+
+    @staticmethod
+    def extract_html_code(markdown_text):
+        # Extract HTML code blocks from markdown text
+        pattern = r"```html\n(.*?)```"
+        matches = re.findall(pattern, markdown_text, re.DOTALL)
+        if not matches:
+            logging.warning("No HTML code blocks found.")
+            return ""
+        return "\n".join(matches).strip()
+
+    @staticmethod
+    def format_html_code(code):
+        # Basic HTML formatting (placeholder for real formatter)
+        formatted_code = code.replace('>', '>\n').replace('<', '\n<')
+        return True, formatted_code
+
 
 
 class FileManager:
     @staticmethod
-    def save_script(filename, content):
-        with open(filename, 'w') as file:
-            file.write(content)
-            logging.info(f"Algorithm script saved to {filename} successfully.")
+    def detect_language(content):
+        # Detect language from the first line
+        first_line = content.split('\n', 1)[0]
+        if "#lang=" in first_line:
+            return first_line.split('=')[1].strip()
+        elif "<!--lang=" in first_line:
+            return first_line.split('=')[1].split('-->')[0].strip()
+        return "unknown"
 
     @staticmethod
-    def save_conversation_dataset(filename, conversation_history):
-        with open(filename, 'w') as file:
-            for entry in conversation_history:
-                # Format the entry for fine-tuning
-                formatted_entry = {
-                    "messages": [
-                        {"role": "system", "content": entry.get("system_message", "")},
-                        {"role": "user", "content": entry.get("user_message", "")},
-                        {"role": "assistant", "content": entry.get("assistant_message", "")}
-                    ]
-                }
-                file.write(json.dumps(formatted_entry) + '\n')
-            logging.info(f"Conversation history saved to {filename} successfully.")
+    def get_file_extension(language):
+        # Mapping languages to file extensions
+        return {
+            "python": ".py",
+            "html": ".html",
+            "javascript": ".js",
+            "css": ".css"
+        }.get(language, ".txt")
+
+    @staticmethod
+    def save_script(filename, content):
+        # Detect language and save file with correct extension
+        language = FileManager.detect_language(content)
+        extension = FileManager.get_file_extension("python" or language)
+        filename_with_extension = f"{filename}{extension}"
+        with open(filename_with_extension, 'w') as file:
+            file.write(content)
+            logging.info(f"Script saved to {filename_with_extension} successfully.")
+
 def save_with_unique_name(base_name, content, file_type):
     # Generate a unique timestamp
     timestamp = int(time.time())
-    # Create a unique file name
-    file_name = f"{base_name}_{timestamp}.{file_type}"
+    # Detect the language of the content
+    language = FileManager.detect_language(content)
+    # Create a unique file name with the correct extension
+    file_name = f"{base_name}_{timestamp}"
     # Save the file using FileManager
-    if file_type == 'py':
-        FileManager.save_script(file_name, content)
-    elif file_type == 'json':
-        FileManager.save_conversation_dataset(file_name, content)
-    else:
-        raise ValueError("Unsupported file type")
+    FileManager.save_script(file_name, content)
     return file_name
 
 def preprocess_conversation_data(file_path):
