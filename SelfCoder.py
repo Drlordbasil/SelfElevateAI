@@ -1,3 +1,5 @@
+import datetime
+from html import escape
 import random
 import subprocess
 import logging
@@ -21,7 +23,7 @@ class OpenAIHandler:
 
     def create_message(self, system_content, user_content, assistant_content=None):
         structured_messages = [
-            {"role": "system", "content": "You only send functioning logic and 0 chatter. You can only speak in valid robust code, which is your job. All your scripts are complex with error-handling, self installing of required libraries within the script on start."},
+            {"role": "system", "content": "!!!NEVER INCLUDE INLINE COMMENTS OR PLACEHOLDERS!!!You only send functioning logic and 0 chatter. You can only speak in valid robust code, which is your job. All your scripts are complex with error-handling, self installing of required libraries within the script on start."},
             {"role": "system", "content": system_content},
             {"role": "user", "content": user_content}
         ]
@@ -178,12 +180,12 @@ class AlgoTester:
         self.openai_handler = openai_handler
 
     def test_algo(self, algo_code):
-        system_message = "Testing algorithm code"
-        user_message = algo_code  # The code being tested is the user's 'input' in this context
-
+        system_message = f"[{datetime.datetime.now()}] Testing algorithm code"
+        user_message = algo_code
         try:
+            sanitized_code = self.sanitize_code(algo_code)
             test_process = subprocess.Popen(
-                [sys.executable, "-c", algo_code],
+                [sys.executable, "-c", sanitized_code],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True
@@ -191,44 +193,25 @@ class AlgoTester:
             stdout, stderr = test_process.communicate(timeout=30)
 
             if stderr:
-                logging.error(f"Algorithm Testing Failed: {stderr}")
+                logging.error(f"[{datetime.datetime.now()}] Algorithm Testing Failed: {stderr}")
                 assistant_message = f"Test Failed: {stderr}"
-                conversation_history.append({
-                    "system_message": system_message,
-                    "user_message": user_message,
-                    "assistant_message": assistant_message
-                })
-                
-                return False, stderr, None  # Add a third return value (None) for the suggestion
+                self.log_conversation(system_message, user_message, assistant_message)
+                return False, stderr, None
 
             suggestion = self.get_openai_suggestion(algo_code, stdout)
             assistant_message = f"Test Succeeded: {stdout}"
-            conversation_history.append({
-                "system_message": system_message,
-                "user_message": user_message,
-                "assistant_message": assistant_message
-            })
-            logging.info(f"Algorithm Testing Success: {stdout}")
+            self.log_conversation(system_message, user_message, assistant_message)
+            logging.info(f"[{datetime.datetime.now()}] Algorithm Testing Success: {stdout}")
             return True, stdout, suggestion
+
         except subprocess.TimeoutExpired:
             error_message = "Algorithm testing timed out."
-            logging.error(error_message)
-            assistant_message = f"Test Failed: {error_message}"
-            conversation_history.append({
-                "system_message": system_message,
-                "user_message": user_message,
-                "assistant_message": assistant_message
-            })
+            self.handle_error(system_message, user_message, error_message)
             return False, error_message, None
+
         except Exception as e:
-            error_message = f"Error in testing algorithm: {e}"
-            logging.error(error_message)
-            assistant_message = f"Test Failed: {error_message}"
-            conversation_history.append({
-                "system_message": system_message,
-                "user_message": user_message,
-                "assistant_message": assistant_message
-            })
+            error_message = f"Error in testing algorithm: {str(e)}"
+            self.handle_error(system_message, user_message, error_message)
             return False, str(e), None
 
     def get_openai_suggestion(self, code, output):
@@ -237,6 +220,20 @@ class AlgoTester:
         response = self.openai_handler.get_response(messages)
         return response if response else "No suggestions available."
 
+    def sanitize_code(self, code):
+        return escape(code)
+
+    def log_conversation(self, system_message, user_message, assistant_message):
+        conversation_history.append({
+            "system_message": system_message,
+            "user_message": user_message,
+            "assistant_message": assistant_message
+        })
+
+    def handle_error(self, system_message, user_message, error_message):
+        logging.error(f"[{datetime.datetime.now()}] {error_message}")
+        assistant_message = f"Test Failed: {error_message}"
+        self.log_conversation(system_message, user_message, assistant_message)
 
 
 
@@ -403,12 +400,13 @@ if __name__ == "__main__":
     conversation_history = []
 
     logging.info("Starting the iterative improvement process for the AI algorithm.")
-    for iteration in range(max_iterations):
+    iteration = 0
+    while iteration < max_iterations:
         logging.info(f"Iteration {iteration + 1}: Developing and testing the algorithm.")
         conversation_history.append({
             'iteration': iteration,
             'algorithm_code': algo_code,
-            'error_message': error_message
+            'error_message': ''
         })
         algo_code = algo_developer.develop_algo(algo_code, error_message)
         if algo_code:
@@ -418,7 +416,7 @@ if __name__ == "__main__":
                 logging.info(f"Algorithm successfully tested. Feedback: {feedback}")
                 performance_metrics[iteration] = feedback
                 conversation_history[-1]['feedback'] = feedback
-
+                iteration += 1
             else:
                 logging.error(f"Algorithm testing failed. Error: {feedback}")
                 error_message = feedback
@@ -426,6 +424,7 @@ if __name__ == "__main__":
         #else:
             #logging.error("Failed to develop a valid algorithm. Stopping the iterative process.")
             #break
+
 
     unique_algo_file = save_with_unique_name("final_algo_script", algo_code, "py")
     unique_convo_file = save_with_unique_name("conversation_dataset", conversation_history, "json")
