@@ -21,7 +21,7 @@ class OpenAIHandler:
 
     def create_message(self, system_content, user_content, assistant_content=None):
         structured_messages = [
-            {"role": "system", "content": "You only send functioning logic and 0 chatter. You can only speak in valid robust code, which is your job."},
+            {"role": "system", "content": "You only send functioning logic and 0 chatter. You can only speak in valid robust code, which is your job. All your scripts are complex with error-handling, self installing of required libraries within the script on start."},
             {"role": "system", "content": system_content},
             {"role": "user", "content": user_content}
         ]
@@ -239,50 +239,7 @@ class AlgoTester:
 
 
 
-class AdaptiveCodeGenerator:
-    def __init__(self, openai_handler, epochs=10):
-        self.openai_handler = openai_handler
-        self.epochs = epochs
-        self.successful_prompts = []
-        self.unsuccessful_prompts = []
-        self.learning_rate = 0.1
 
-    def train(self):
-        for epoch in range(self.epochs):
-            chosen_prompt = self.choose_prompt_strategy()
-            if chosen_prompt:
-                response = self.generate_code(chosen_prompt)
-                success = self.evaluate_success(response)
-                self.provide_feedback(chosen_prompt, success)
-                self.adjust_learning_rate(epoch)
-
-    def generate_code(self, prompt):
-        generated_code = self.openai_handler.make_api_call(prompt)
-        return generated_code
-
-    def provide_feedback(self, prompt, success):
-        if success:
-            self.successful_prompts.append(prompt)
-        else:
-            self.unsuccessful_prompts.append(prompt)
-
-    def choose_prompt_strategy(self):
-        if self.successful_prompts and random.random() < self.learning_rate:
-            return random.choice(self.successful_prompts)
-        elif self.unsuccessful_prompts:
-            return random.choice(self.unsuccessful_prompts)
-        return None
-
-    def adjust_learning_rate(self, epoch):
-        self.learning_rate += (1 / self.epochs) * (0.5 - random.random())
-
-    def evaluate_success(self, code):
-        try:
-            ast.parse(code) if ast.parse(code) else True    
-
-            return True
-        except SyntaxError:
-            return False
 
 
 class CodingUtils:
@@ -415,36 +372,21 @@ class FileManager:
 def save_with_unique_name(base_name, content, file_type):
     # Generate a unique timestamp
     timestamp = int(time.time())
-    # Detect the language of the content
-    language = FileManager.detect_language(content)
     # Create a unique file name with the correct extension
-    file_name = f"{base_name}_{timestamp}"
-    # Save the file using FileManager
-    FileManager.save_script(file_name, content)
+    file_name = f"{base_name}_{timestamp}.{file_type}"  # Add the file_type as extension
+
+    # Handling different types of content
+    if file_type == 'json':
+        # Serialize and save JSON content
+        with open(file_name, 'w') as file:
+            json.dump(content, file)
+    else:
+        # For other file types, use FileManager to save
+        FileManager.save_script(file_name, content)
+
     return file_name
 
-def preprocess_conversation_data(file_path):
-    preprocessed_data = ""
 
-    with open(file_path, 'r') as file:
-        for line in file:
-            try:
-                conversation_entry = json.loads(line)
-                system_msg = conversation_entry.get('system_message', '').strip()
-                user_msg = conversation_entry.get('user_message', '').strip()
-                assistant_msg = conversation_entry.get('assistant_message', '').strip()
-
-                # Format the conversation for the GPT model
-                if system_msg:
-                    preprocessed_data += f"System: {system_msg}\n"
-                if user_msg:
-                    preprocessed_data += f"User: {user_msg}\n"
-                if assistant_msg:
-                    preprocessed_data += f"Assistant: {assistant_msg}\n\n"
-            except json.JSONDecodeError as e:
-                logging.error(f"Error decoding JSON: {e}")
-
-    return preprocessed_data
 
 
 if __name__ == "__main__":
@@ -452,7 +394,7 @@ if __name__ == "__main__":
     openai_handler = OpenAIHandler()
     algo_developer = AlgoDeveloper(openai_handler)
     algo_tester = AlgoTester(openai_handler)
-    adaptive_generator = AdaptiveCodeGenerator(openai_handler)
+
     initial_script = ""
     algo_code = initial_script
     #user_iteration = int(input("Enter number of Iterations:"))
@@ -477,7 +419,7 @@ if __name__ == "__main__":
                 logging.info(f"Algorithm successfully tested. Feedback: {feedback}")
                 performance_metrics[iteration] = feedback
                 conversation_history[-1]['feedback'] = feedback
-                #adaptive_generator.train()
+
             else:
                 logging.error(f"Algorithm testing failed. Error: {feedback}")
                 error_message = feedback
@@ -490,7 +432,7 @@ if __name__ == "__main__":
     unique_convo_file = save_with_unique_name("conversation_dataset", conversation_history, "json")
     print(f"Algorithm script saved as: {unique_algo_file}")
     print(f"Conversation dataset saved as: {unique_convo_file}")
-    preprocessed_data = preprocess_conversation_data(unique_convo_file)
+  
 
     logging.info("Iterative improvement process completed.")
     logging.info(f"Final performance metrics: {performance_metrics}")
