@@ -147,7 +147,7 @@ class AlgoDeveloper:
             "assistant_message": improved_algo_code if improved_algo_code else "No improvement"
         })
 
-        if improved_algo_code and CodingUtils.is_code_valid(improved_algo_code):
+        if improved_algo_code and CodingUtils.is_code_valid("python",improved_algo_code):
             if len(improved_algo_code) > len(algo_code):
                 logging.info("AI algorithm improvement found and validated.")
                 return improved_algo_code
