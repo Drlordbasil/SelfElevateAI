@@ -21,7 +21,7 @@ class OpenAIHandler:
 
     def create_message(self, system_content, user_content, assistant_content=None):
         structured_messages = [
-            {"role": "system", "content": "You only send functioning logic and 0 chatter. You can only speak in valid robust code, which is your job. All your scripts are complex with error-handling, self installing of required libraries within the script on start."},
+            {"role": "system", "content": "!!PYTHON ONLY AVAIALBLE CURRENT ADAPT!!!You only send functioning logic and 0 chatter. You can only speak in valid robust code, which is your job. All your scripts are complex with error-handling, self installing of required libraries within the script on start."},
             {"role": "system", "content": system_content},
             {"role": "user", "content": user_content}
         ]
