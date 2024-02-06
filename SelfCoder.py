@@ -37,44 +37,70 @@ class OpenAIHandler:
         except Exception as e:
             logging.error("Failed to get response from OpenAI: {}".format(e))
             return None
-
 class AlgoDeveloper:
     def __init__(self, openai_handler):
         self.openai_handler = openai_handler
 
-    def _generate_messages(self, algo_code, error_message):
+    def _generate_messages(self, algo_code, error_message, historical_data):
+        # Dynamically generate messages based on historical data and error messages
         if not algo_code:
             # Initial prompt for generating a new script
-            system_message = (
-                "Create an AI model using mathematical principles, neural networks (NN), or Proximal Policy Optimization/Reinforcement Learning (PPO/RL). "
-                "Structure the model with distinct classes for each core functionality, aiming for approximately 10 classes. "
-                "The model should embody a concrete purpose and align with the concept of an evolving AI capable of adaptive learning. "
-                "The code should be free from pseudocode, inline commentary, and placeholders."
-            )
-            user_message = (
-                "Construct a foundational, adaptable AI entity, akin to a 'stem cell'. "
-                "Utilize math-based AI principles, integrating NN and PPO/RL techniques. "
-                "Develop a clean, well-structured codebase with individual classes for distinct functionalities. "
-                "Focus on creating a practical, purpose-driven model. Only send valid code."
-            )
+            system_message = "Create a Python script focused on AI model development."
+            user_message = "I need a Python script for AI development."
         else:
-            # Subsequent prompts for improving the script based on feedback
-            system_message = "Improve the Python script to address the following feedback: "
-            user_message = "Revise the script considering this feedback: "
-            if error_message:
-                system_message += error_message
-                user_message += error_message
-            else:
-                system_message += "No specific errors, please enhance the script's functionality and performance."
-                user_message += "Make general improvements to enhance functionality and performance."
-        
+            # Generate prompts based on historical data and error messages
+            system_message, user_message = self._analyze_and_adapt_messages(historical_data, error_message)
+
         return system_message, user_message
 
+    def _analyze_and_adapt_messages(self, historical_data, error_message):
+        # Analyze historical data to adapt the prompts
+        common_errors, recent_feedback = self._analyze_historical_data(historical_data)
+
+        system_message = "Refine the Python script by addressing the following issues: "
+        user_message = "Please correct the script focusing on these areas: "
+
+        if error_message:
+            system_message += error_message + " "
+            user_message += error_message + " "
+
+        if common_errors:
+            system_message += "Common errors observed: " + ', '.join(common_errors) + ". "
+            user_message += "Address these frequent issues: " + ', '.join(common_errors) + ". "
+
+        if recent_feedback:
+            system_message += "Also consider recent feedback: " + recent_feedback + "."
+            user_message += "Incorporate the latest suggestions: " + recent_feedback + "."
+
+        return system_message, user_message
+    def _analyze_historical_data(self, historical_data):
+        # Implement logic to analyze historical data and extract insights
+        error_frequency = {}
+        latest_feedback = None
+
+        for iteration in historical_data:
+            error_msg = iteration.get('error_message')
+            feedback = iteration.get('feedback')
+
+            if error_msg:
+                error_frequency[error_msg] = error_frequency.get(error_msg, 0) + 1
+
+            if feedback:
+                latest_feedback = feedback  # Keep updating to get the most recent feedback
+
+        # Identify the most common errors
+        common_errors = sorted(error_frequency, key=error_frequency.get, reverse=True)
+
+        return common_errors[:3], latest_feedback  # Return top 3 common errors and the latest feedback
+
+
     def develop_algo(self, algo_code=None, error_message=None):
+        historical_data = FileManager.get_historical_data('iteration_history.json')
         max_attempts = 10
         attempt = 0
+
         while attempt < max_attempts:
-            system_message, user_message = self._generate_messages(algo_code, error_message)
+            system_message, user_message = self._generate_messages(algo_code, error_message, historical_data)
             messages = self.openai_handler.create_message(system_message, user_message)
             response = self.openai_handler.get_response(messages)
             improved_algo_code = CodingUtils.extract_python_code(response)
@@ -83,6 +109,13 @@ class AlgoDeveloper:
                 test_result, feedback, suggestion = algo_tester.test_algo(improved_algo_code)
                 if test_result:
                     logging.info("AI algorithm improvement found and validated.")
+                    FileManager.log_iteration_data('iteration_history.json', {
+                        'iteration': attempt,
+                        'algorithm_code': improved_algo_code,
+                        'feedback': feedback,
+                        'error_message': error_message,
+                        'suggestion': suggestion
+                    })
                     return improved_algo_code
                 else:
                     error_message = feedback
@@ -92,6 +125,7 @@ class AlgoDeveloper:
             attempt += 1
 
         return algo_code
+
 
 class AlgoTester:
     def __init__(self, openai_handler):
@@ -192,6 +226,26 @@ class FileManager:
                 file.write(json.dumps(formatted_entry) + '\n')
             logging.info(f"Conversation history saved to {filename} successfully.")
 
+    @staticmethod
+    def log_iteration_data(filename, iteration_data):
+        with open(filename, 'a') as file:
+            file.write(json.dumps(iteration_data) + '\n')
+            logging.info(f"Iteration data logged to {filename} successfully.")
+
+    @staticmethod
+    def get_historical_data(filename):
+        historical_data = []
+        try:
+            with open(filename, 'r') as file:
+                for line in file:
+                    historical_data.append(json.loads(line))
+            return historical_data
+        except FileNotFoundError:
+            logging.warning(f"No historical data found in {filename}.")
+            return []
+
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     openai_handler = OpenAIHandler()
@@ -200,7 +254,7 @@ if __name__ == "__main__":
     
     initial_script = ""
     algo_code = initial_script
-    max_iterations = 5
+    max_iterations = 10
     error_message = None
     performance_metrics = {}
     conversation_history = []
