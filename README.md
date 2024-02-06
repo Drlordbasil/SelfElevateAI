@@ -1,9 +1,7 @@
 # AI Algorithm Development and Testing Framework
-![image](https://github.com/Drlordbasil/SelfImprovAlgoBot/assets/126736516/b2a167a2-e887-49aa-9ba6-49097f45117b)
+![image](https://github.com/Drlordbasil/SelfImprovAlgoBot/assets/126736516/9ca6e070-5867-44aa-97cb-264bc324476d)
 
-![image](https://github.com/Drlordbasil/SelfImprovAlgoBot/assets/126736516/2529ab29-3dbb-4057-8453-4c97be6097aa)
-
-![image](https://github.com/Drlordbasil/SelfImprovAlgoBot/assets/126736516/cf868c65-42a9-4f72-8aa3-88832d9d4d4b)
+![image](https://github.com/Drlordbasil/SelfImprovAlgoBot/assets/126736516/b57c1b40-edbb-442b-a57e-8107bf226ec1)
 
 
 ## Overview
