@@ -45,8 +45,13 @@ class AlgoDeveloper:
         # Dynamically generate messages based on historical data and error messages
         if not algo_code:
             # Initial prompt for generating a new script
-            system_message = "Create a Python script focused on AI model development."
-            user_message = "I need a Python script for AI development."
+            system_message = (
+                "Initiate the development of a Python script dedicated to crafting high-value AI models. Incorporate core classes and ensure the inclusion of at least five distinct, sophisticated, and fully functional Python logic segments that significantly contribute to the overall effectiveness of the program."
+            )
+            user_message = (
+                "Create a Python script aimed at developing highly efficient and impactful AI models. The script should strictly avoid examples, artificial data paths (like path_to_dataset), or any non-functional elements. Instead, focus on real programming techniques and include data that is either publicly accessible online or retrievable through standard Python data libraries."
+            )
+
         else:
             # Generate prompts based on historical data and error messages
             system_message, user_message = self._analyze_and_adapt_messages(historical_data, error_message)
@@ -56,9 +61,12 @@ class AlgoDeveloper:
     def _analyze_and_adapt_messages(self, historical_data, error_message):
         # Analyze historical data to adapt the prompts
         common_errors, recent_feedback = self._analyze_historical_data(historical_data)
-
-        system_message = "Refine the Python script by addressing the following issues: "
-        user_message = "Please correct the script focusing on these areas: "
+        system_message = (
+            "Enhance the Python script comprehensively, targeting these key areas for improvement. Ensure thorough debugging, optimization of code efficiency, and enhancement of feature implementation: "
+        )
+        user_message = (
+            "Thoroughly revise and improve the script, with a focus on these critical aspects (while ensuring the removal of all inline comments and placeholders, and enhancing overall code quality and functionality): "
+        )
 
         if error_message:
             system_message += error_message + " "
