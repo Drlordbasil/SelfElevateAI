@@ -3,6 +3,7 @@
 
 ![image](https://github.com/Drlordbasil/SelfImprovAlgoBot/assets/126736516/b57c1b40-edbb-442b-a57e-8107bf226ec1)
 
+![image](https://github.com/Drlordbasil/SelfImprovAlgoBot/assets/126736516/3e224a0b-4f85-4771-8fcb-1639bd592b32)
 
 ## Overview
 This project presents an automated framework for the development, testing, and improvement of AI algorithms using OpenAI's GPT models. It's designed to iteratively develop and refine AI algorithms based on feedback and error analysis.
