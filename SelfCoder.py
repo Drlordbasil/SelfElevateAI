@@ -7,8 +7,8 @@ import re
 import json
 from openai import OpenAI
 
-gpt4 = "gpt-4-1106-preview"
-gpt3 = "gpt-3.5-turbo-1106"
+gpt4 = "gpt-4-0125-preview"
+gpt3 = "gpt-3.5-turbo-0125"
 
 class OpenAIHandler:
     def __init__(self, model=gpt3):
@@ -46,10 +46,10 @@ class AlgoDeveloper:
         if not algo_code:
             # Initial prompt for generating a new script
             system_message = (
-                "Initiate the development of a Python script dedicated to crafting high-value AI models. Incorporate core classes and ensure the inclusion of at least five distinct, sophisticated, and fully functional Python logic segments that significantly contribute to the overall effectiveness of the program."
+                "You are an amazing python scripting AI within a complex programming automation sequence making amazing high level scripts.markdown the script, Initiate the development of a Python script dedicated to automating instagram creation of accounts, emails, everything via python automation libraries"
             )
             user_message = (
-                "Create a Python script aimed at developing highly efficient and impactful AI models. The script should strictly avoid examples, artificial data paths (like path_to_dataset), or any non-functional elements. Instead, focus on real programming techniques and include data that is either publicly accessible online or retrievable through standard Python data libraries."
+                "Create a Python script aimed at instagram account generation including email and account creation."
             )
 
         else:
@@ -62,7 +62,7 @@ class AlgoDeveloper:
         # Analyze historical data to adapt the prompts
         common_errors, recent_feedback = self._analyze_historical_data(historical_data)
         system_message = (
-            "Enhance the Python script comprehensively, targeting these key areas for improvement. Ensure thorough debugging, optimization of code efficiency, and enhancement of feature implementation: "
+            "Enhance the marked down Python script comprehensively, targeting these key areas for improvement. Ensure thorough debugging, optimization of code efficiency, and enhancement of feature implementation."
         )
         user_message = (
             "Thoroughly revise and improve the script, with a focus on these critical aspects (while ensuring the removal of all inline comments and placeholders, and enhancing overall code quality and functionality): "
