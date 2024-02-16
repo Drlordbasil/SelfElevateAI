@@ -7,7 +7,7 @@ import re
 import json
 from openai import OpenAI
 
-idea = "WIFI password cracker"
+idea = "!!! IT MUST DYNAMICALLY GET DATA !!!Dynamic OPENCV2 RL/NN training GUI that allows user to select images in file browser for the model to train on to learn what to click better based on 60 percent or above accuracy looping images it finds into its training if user approves. Add approve or deny per its thought on what to click, this will train new models to properly do things for the user by training on specific images and teaching it how to click them anywhere on the screen properly."
 
 gpt4 = "gpt-4-0125-preview"
 gpt3 = "gpt-3.5-turbo-0125"
@@ -122,7 +122,24 @@ class AlgoDeveloper:
 
     def _generate_initial_prompt(self):
         system_message = "Create a Python script for an automation task emphasizing profitability, automation potential, and practicality, avoiding placeholders and ensuring the script is self-contained."
-        user_message = f"Develop a Python script based on the idea: {idea}. The script should be innovative, practical, and ready for deployment, incorporating advanced libraries as needed."
+        user_message = f"""
+        Develop a Python script based on the idea: {idea}. The script should be innovative, practical, and ready for deployment, incorporating advanced libraries as needed.Your response will be structred like this:\n
+
+        ```python
+        # Your Python code here
+        ``
+        #####TODO LIST YOU NEED TO DO NEXT ITERATION #################################
+        1. <your todo list based on dynamically thinking about step you are on>
+        2.
+        3.
+        
+        ### SELF REFELCTION ON YOUR CODE AND WHAT YOU THINK YOU NEED TO DO NEXT ITERATION###
+        <insert your self reflection here>
+        ### DIRECTION YOU NEED TO MAKE MOST EFFECIENT CHOICES ###
+        <insert your effecient direction steps here>
+        """
+ 
+        
         return system_message, user_message
 
     def _generate_follow_up_prompt(self, historical_data, error_message):
@@ -185,7 +202,22 @@ class AlgoTester:
 
     def get_openai_suggestion(self, code, output):
         prompt = f"[never include placeholder filenames or placeholders like 'pass' in python]Review and improve the following Python code with a fine toothed comb, so to speak, while improving its classes and its output of either productivity and/or more profitable means and/or cheaper costs to run, then provide real improvements to the code:\n\nCode:\n{code}\n\nOutput:\n{output}\n\nNew Script:"
-        system_message = "You are a Debugger that sends a revised python script to another AI for running local testing in cmd prompt subprocess and will get an output, ensure the logging is verbose and robust. You are to improve at least 3 functionings and complete the todo list."
+        system_message = """
+        You are a Debugger that sends a revised python script to another AI for running local testing in cmd prompt subprocess and will get an output, ensure the logging is verbose and robust. You are to improve at least 3 functionings and complete the todo list.
+        ```python
+        # Your Python code here
+        ``
+        #####TODO LIST YOU NEED TO DO NEXT ITERATION #################################
+        1. <your todo list based on dynamically thinking about step you are on>
+        2.
+        3.
+        
+        ### SELF REFELCTION ON YOUR CODE AND WHAT YOU THINK YOU NEED TO DO NEXT ITERATION###
+        <insert your self reflection here>
+        ### DIRECTION YOU NEED TO MAKE MOST EFFECIENT CHOICES ###
+        <insert your effecient direction steps here>
+
+        """
         user_message = prompt
         # Using the combined method to create the message and get the response in one call
         response = self.openai_handler.get_response_with_message(system_message, user_message)
@@ -233,7 +265,7 @@ class AlgoTester:
             return True, stdout, suggestion
 
         except subprocess.TimeoutExpired:
-            timeout_msg = "Algorithm testing timed out. Possible reason: User input required."
+            timeout_msg = "Algorithm testing timed out. Possible reason: User input required(use tests to output properly if no user input is given we need it to still test it within 5 seconds of no user input)."
             self.log_message(timeout_msg, level="error")
             return False, timeout_msg, suggestion
 
