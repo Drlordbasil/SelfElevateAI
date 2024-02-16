@@ -67,7 +67,9 @@ class OpenAIHandler:
 
 
 
-
+'''
+note: Im not sure what im going to do with the collab class yet. 
+'''
 
 class CollaborativeAgent:
     def __init__(self, openai_handler):
@@ -90,8 +92,7 @@ class CollaborativeAgent:
             response = self.openai_handler.get_response_with_message(system_message, user_message)
 
             if response:
-                # Assuming the response can directly be used as the next round's user_message.
-                # Modify this as necessary to fit the response format and requirements.
+
                 current_task['user_content'] = response
             else:
                 logging.error("Failed to obtain a response for the current collaboration round.")
