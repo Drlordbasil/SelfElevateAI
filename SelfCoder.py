@@ -7,8 +7,7 @@ import re
 import json
 from openai import OpenAI
 
-idea = "!!! IT MUST DYNAMICALLY GET DATA !!!Dynamic OPENCV2 RL/NN training GUI that allows user to select images in file browser for the model to train on to learn what to click better based on 60 percent or above accuracy looping images it finds into its training if user approves. Add approve or deny per its thought on what to click, this will train new models to properly do things for the user by training on specific images and teaching it how to click them anywhere on the screen properly."
-
+idea = "create a NN based pygame that a user can play against an AI npc"
 gpt4 = "gpt-4-0125-preview"
 gpt3 = "gpt-3.5-turbo-0125"
 
