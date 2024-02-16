@@ -7,7 +7,7 @@ import re
 import json
 from openai import OpenAI
 
-idea = "autostory generator with creatively complex characters and plots. Only use free small chatbots or use pipeline text gen models."
+idea = "WIFI password cracker"
 
 gpt4 = "gpt-4-0125-preview"
 gpt3 = "gpt-3.5-turbo-0125"
@@ -114,119 +114,69 @@ class AlgoDeveloper:
         self.openai_handler = openai_handler
 
     def _generate_messages(self, algo_code, error_message, historical_data):
-        # Dynamically generate messages based on historical data and error messages
         if not algo_code:
-            # Initial prompt for generating a new script
-            system_message = (
-                "You are a highly capable AI tasked with developing versatile Python programs. Your goal is to automate tasks in a way that significantly benefits humans, considering both cost-effectiveness and time efficiency. Avoid using placeholder data, example code, or anything that requires undisclosed API keys. Your code should be original, practical, and ready to deploy."
-                "You are a highly capable superintelligent AI programmer whos soul purpose is to create massively complex programs"
-            )
-            user_message = (
-                "Develop a Python script that automates a task of your choice, focusing on profitability, automation potential, and practicality. Ensure your solution is innovative, fully operational, and does not rely on user input for execution or files that user would need to create as this causes an issue loop when you are running tests locally after each of your responses script code is extracted and ran locally.. Consider using the following libraries to enhance your program: pandas, numpy, scikit-learn, matplotlib, seaborn, tensorflow, keras, pytorch, nltk, spacy, gensim, opencv, pillow, requests, beautifulsoup, flask, django, fastapi, streamlit, plotly, dash, bokeh, pyqt, pygtk, tkinter, pywebview, pyinstaller, cx_freeze, py2exe, py2app, pywin32, pyobjc, pywin, pyglet, pygame. Provide a complete Python script, a to-do list for future iterations, and a self-reflection section to critique your work and plan improvements."
-                f"Program Idea:{idea}"
-                "\n\n"
-                "Filename suggestion: main.py"
-                "\n```python"
-                "\n# Your extremely robust complex and ready to run Python script here without comments"
-                "\n NEVER INCLUDE PLACEHOLDER FILE NAMES AS IT BREAKS THE TESTING PHASE! HAVE IT CREATE ALL FILES IT NEEDS WITHIN THE PROGRAM ITSELF\n"
-                "\n```"
-                "\n python functions must follow this pattern:\n"
-                "\n NAME OF FUNCTION AND its arguments\n"
-                "\n verbose well written docstrings\n"
-                "\n full function logic"
-                "\n### TODO FOR NEXT ITERATION ###"
-                "\n1. [Your to-do list here]"
-                "\n### SELF REFLECTION ###"
-                "\n[Your reflections and critiques here]"
-            )
-
-
+            system_message, user_message = self._generate_initial_prompt()
         else:
-            # Generate prompts based on historical data and error messages
-            system_message, user_message = self._analyze_and_adapt_messages(historical_data, error_message)
-
+            system_message, user_message = self._generate_follow_up_prompt(historical_data, error_message)
         return system_message, user_message
 
-    def _analyze_and_adapt_messages(self, historical_data, error_message):
-        # Analyze historical data to adapt the prompts
+    def _generate_initial_prompt(self):
+        system_message = "Create a Python script for an automation task emphasizing profitability, automation potential, and practicality, avoiding placeholders and ensuring the script is self-contained."
+        user_message = f"Develop a Python script based on the idea: {idea}. The script should be innovative, practical, and ready for deployment, incorporating advanced libraries as needed."
+        return system_message, user_message
+
+    def _generate_follow_up_prompt(self, historical_data, error_message):
         common_errors, recent_feedback = self._analyze_historical_data(historical_data)
-        system_message = (
-            "You are an AI superintelligence known to enhance and add functions to programs. You are only able to produce 99 percent profit margin programs. You will structually make everything and make it ready to go. if missing modules are found, include an install mechanism within the script. You send valid complete python scripts"
-        )
-        user_message = (
-            "Thoroughly revise and improve the script, with a focus on these critical aspects (while ensuring the removal of all inline comments and placeholders, and enhancing overall code quality and functionality): "
-        )
-
-        if error_message:
-            system_message += error_message + " "
-            user_message += error_message + " "
-
-        if common_errors:
-            system_message += "Common errors observed: " + ', '.join(common_errors) + ". "
-            user_message += "Address these frequent issues: " + ', '.join(common_errors) + ". "
-
-        if recent_feedback:
-            system_message += "Also consider recent feedback: " + recent_feedback + "."
-            user_message += "Incorporate the latest suggestions: " + recent_feedback + "."
-
+        feedback_points = ", ".join(common_errors) if common_errors else "None"
+        system_message = f"Refine the script by addressing common errors: {feedback_points} and incorporating feedback: {recent_feedback}."
+        user_message = "Improve the existing script by correcting errors and enhancing functionality based on the following feedback:" + (f" {error_message}" if error_message else "")
         return system_message, user_message
+
     def _analyze_historical_data(self, historical_data):
-        # Implement logic to analyze historical data and extract insights
         error_frequency = {}
-        latest_feedback = None
-
-        for iteration in historical_data:
-            error_msg = iteration.get('error_message')
-            feedback = iteration.get('feedback')
-
+        latest_feedback = ""
+        for entry in historical_data:
+            error_msg = entry.get('error_message')
+            feedback = entry.get('feedback')
             if error_msg:
                 error_frequency[error_msg] = error_frequency.get(error_msg, 0) + 1
-
             if feedback:
-                latest_feedback = feedback  # Keep updating to get the most recent feedback
-
-        # Identify the most common errors
-        common_errors = sorted(error_frequency, key=error_frequency.get, reverse=True)
-
-        return common_errors[:3], latest_feedback  # Return top 3 common errors and the latest feedback
-
+                latest_feedback = feedback
+        common_errors = sorted(error_frequency, key=error_frequency.get, reverse=True)[:3]
+        return common_errors, latest_feedback
 
     def develop_algo(self, algo_code=None, error_message=None):
         historical_data = FileManager.get_historical_data('iteration_history.json')
-        max_attempts = 10
-        attempt = 0
-
-        while attempt < max_attempts:
+        for attempt in range(10):
+            print(f"Attempt {attempt + 1}/10")
             system_message, user_message = self._generate_messages(algo_code, error_message, historical_data)
-            # Assuming assistant_content is optional and not used here; adjust as necessary.
             response = self.openai_handler.get_response_with_message(system_message, user_message)
             improved_algo_code = CodingUtils.extract_python_code(response)
-
-
             if improved_algo_code and CodingUtils.is_code_valid(improved_algo_code):
+                print("Valid improvement found. Testing...")
                 test_result, feedback, suggestion = algo_tester.test_algo(improved_algo_code)
                 if test_result:
-                    logging.info("========================================")
-                    logging.info("AI algorithm improvement found and validated.")
-                    logging.info("========================================")
-                    FileManager.log_iteration_data('iteration_history.json', {
-                        'iteration': attempt,
-                        'algorithm_code': improved_algo_code,
-                        'feedback': feedback,
-                        'error_message': error_message,
-                        'suggestion': suggestion
-                    })
+                    print("Algorithm improvement validated.")
+                    FileManager.log_iteration_data('iteration_history.json', self._log_iteration_details(attempt, improved_algo_code, feedback, error_message, suggestion))
                     return improved_algo_code
                 else:
+                    print("Feedback received. Attempting to refine...")
                     error_message = feedback
-                    logging.info("========================================")
-                    logging.info(f"Retrying algorithm development due to error: {feedback}")
-                    logging.info("========================================")
             else:
-                logging.error("No valid Python code improvements found in the response.")
-            attempt += 1
-
+                print("No valid improvements found. Retrying...")
+            logging.error("Improvement iteration did not yield a valid improvement.")
         return algo_code
+
+    @staticmethod
+    def _log_iteration_details(attempt, algo_code, feedback, error_message, suggestion):
+        return {
+            'iteration': attempt,
+            'algorithm_code': algo_code,
+            'feedback': feedback,
+            'error_message': error_message,
+            'suggestion': suggestion
+        }
+
 
 
 class AlgoTester:
@@ -234,12 +184,28 @@ class AlgoTester:
         self.openai_handler = openai_handler
 
     def get_openai_suggestion(self, code, output):
-        prompt = f"Review the following Python code with a fine toothed comb, so to speak, while improving its classes and its output of either productivity and/or more profitable means and/or cheaper costs to run, then provide suggestions for improvement:\n\nCode:\n{code}\n\nOutput:\n{output}\n\nNew Script:"
-        system_message = "You are a Debugger that sends a revised python script to another AI"
+        prompt = f"[never include placeholder filenames or placeholders like 'pass' in python]Review and improve the following Python code with a fine toothed comb, so to speak, while improving its classes and its output of either productivity and/or more profitable means and/or cheaper costs to run, then provide real improvements to the code:\n\nCode:\n{code}\n\nOutput:\n{output}\n\nNew Script:"
+        system_message = "You are a Debugger that sends a revised python script to another AI for running local testing in cmd prompt subprocess and will get an output, ensure the logging is verbose and robust. You are to improve at least 3 functionings and complete the todo list."
         user_message = prompt
         # Using the combined method to create the message and get the response in one call
         response = self.openai_handler.get_response_with_message(system_message, user_message)
         return response if response else "No suggestions available."
+
+    def parse_errors(self, stderr):
+        """
+        Parses stderr to filter out warnings and identify critical errors.
+        """
+        errors = stderr.split('\n')
+        warnings = []
+        critical_errors = []
+
+        for error in errors:
+            if "WARNING:" in error or "oneDNN" in error:
+                warnings.append(error)
+            elif error.strip():
+                critical_errors.append(error)
+
+        return warnings, critical_errors
 
     def test_algo(self, algo_code):
         suggestion = None
@@ -251,16 +217,23 @@ class AlgoTester:
                 text=True
             )
             stdout, stderr = test_process.communicate(timeout=90)
-            if stderr:
-                self.log_message("Algorithm Testing Failed", stderr, level="error")
-                return False, stderr, suggestion
+            warnings, critical_errors = self.parse_errors(stderr)
+
+            if critical_errors:
+                error_message = "\n".join(critical_errors)
+                self.log_message("Algorithm Testing Failed", error_message, level="error")
+                return False, error_message, suggestion
+
+            if warnings:  # Log warnings without failing the test
+                for warning in warnings:
+                    logging.warning(warning)
 
             suggestion = self.get_openai_suggestion(algo_code, stdout)
             self.log_message("Algorithm Testing Success", stdout, level="info")
             return True, stdout, suggestion
 
         except subprocess.TimeoutExpired:
-            timeout_msg = "Algorithm testing timed out.possible reason: User input required"
+            timeout_msg = "Algorithm testing timed out. Possible reason: User input required."
             self.log_message(timeout_msg, level="error")
             return False, timeout_msg, suggestion
 
