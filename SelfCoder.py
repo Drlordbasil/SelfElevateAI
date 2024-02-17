@@ -10,7 +10,7 @@ from openai import OpenAI
 idea = "create a NN based pygame that a user can play against an AI npc"
 gpt4 = "gpt-4-0125-preview"
 gpt3 = "gpt-3.5-turbo-0125"
-
+ft3 = "ft:gpt-3.5-turbo-1106:personal::8tGk0TIP" # added a fine-tuned model for proper openai usage(updated by fine-tuning on latest api usage
 class OpenAIHandler:
     def __init__(self, model=gpt3):
         self.client = OpenAI()
