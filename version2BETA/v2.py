@@ -1,137 +1,120 @@
 import subprocess
 import logging
 import sys
-import time
 import ast
-import re
 import json
-import requests
 from openai import OpenAI
-import black
-
-# Configuration
-idea = "create a video creation factory using AI"
-gpt_models = {
-    "gpt4": "gpt-4-0125-preview",
-    "gpt3": "gpt-3.5-turbo-0125",
-    "ft3": "ft:gpt-3.5-turbo-1106:personal::8tGk0TIP"
-}
-
-def search(idea):
-    """Simulate searching for an idea."""
-    try:
-        search_results = requests.get(f"https://www.google.com/search?q=\"{idea}\"").json()
-        return search_results
-    except Exception as e:
-        logging.error(f"Search failed: {e}")
-        return {}
 
 class OpenAIHandler:
-    def __init__(self, model=gpt_models["gpt3"]):
+    def __init__(self, model="gpt-3.5-turbo-0125"):
         self.client = OpenAI()
         self.model = model
+        logging.info(f"OpenAI Handler initialized with model {model}")
 
-    def get_response_with_message(self, system_content, user_content, assistant_content=None):
-        """Generate a response from OpenAI based on the given content."""
+    def get_response_with_message(self, system_content, user_content, model_override=None):
+        model = model_override if model_override else self.model
         messages = [
             {"role": "system", "content": system_content},
             {"role": "user", "content": user_content}
         ]
-        if assistant_content:
-            messages.append({"role": "assistant", "content": assistant_content})
-
+        logging.info(f"Fetching response for model {model} with system and user content.")
         try:
-            completion = self.client.chat.completions.create(
-                model=self.model,
-                temperature=0.5,
-                messages=messages
-            )
+            completion = self.client.chat.completions.create(model=model, temperature=0.3, messages=messages)
             response_content = completion.choices[0].message.content
-            # Clean the response content
-            cleaned_content = self.clean_code(response_content)
-            return True, cleaned_content
+            logging.info("Response successfully received from OpenAI.")
+            return response_content
         except Exception as e:
-            logging.error(f"OpenAIHandler error: {e}")
-            return False, "Failed to get a response from OpenAI."
+            logging.error(f"OpenAI API call failed: {e}")
+            return None
 
-    def clean_code(self, code):
-        """Remove comments and 'pass' placeholders from the code."""
-        cleaned_lines = []
-        for line in code.split('\n'):
-            if not line.strip().startswith("#") and 'pass' not in line:
-                cleaned_lines.append(line)
-        return '\n'.join(cleaned_lines)
+class CollaborativeAI:
+    def __init__(self):
+        self.maestro_handler = OpenAIHandler(model="gpt-4-0125-preview")
+        self.agent_handlers = [OpenAIHandler(model="gpt-3.5-turbo-0125") for _ in range(3)]
+        logging.info("Collaborative AI system initialized with Maestro and Agent handlers.")
 
-class AlgoTester:
-    def __init__(self, openai_handler):
-        self.openai_handler = openai_handler
+    def delegate_tasks(self, initial_task_description):
+        system_content = "Maestro AI: Organize and direct your agents to collaboratively design, enhance, and validate a sophisticated algorithm. Employ the strengths of each agent to maximize efficiency and effectiveness."
+        maestro_task = {"system_content": system_content, "user_content": initial_task_description}
+        logging.info("Delegating initial task to Maestro AI.")
+        maestro_response = self.maestro_handler.get_response_with_message(**maestro_task)
 
-    def test_algo(self, algo_code):
-        """Test a given algorithm code and provide feedback."""
         try:
-            process = subprocess.Popen(
-                [sys.executable, "-c", algo_code],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
-            )
-            stdout, stderr = process.communicate(timeout=15)
-            if stderr:
-                return False, stderr
-            return True, stdout
-        except subprocess.TimeoutExpired:
-            return False, "Timeout during execution."
+            task_delegations = json.loads(maestro_response)
+            logging.info("Tasks successfully parsed from Maestro AI response.")
+        except json.JSONDecodeError:
+            logging.error("Failed to decode maestro response into JSON.")
+            return []
+
+        results = []
+        for task in task_delegations.get('tasks', []):
+            agent_id = task.get('agent_id', 0) % len(self.agent_handlers)
+            agent_task = {"system_content": task.get('system_content', ''), "user_content": task.get('user_content', '')}
+            logging.info(f"Delegating task to Agent {agent_id}.")
+            agent_response = self.agent_handlers[agent_id].get_response_with_message(**agent_task)
+            results.append({'task_id': task.get('task_id', ''), 'agent_id': agent_id, 'response': agent_response})
+
+        return results
+
+    def compile_results(self, delegated_results):
+        compiled_results = {}
+        for result in delegated_results:
+            task_id = result['task_id']
+            if task_id not in compiled_results:
+                compiled_results[task_id] = []
+            compiled_results[task_id].append(result)
+            logging.info(f"Compiling result for Task ID {task_id} from Agent ID {result['agent_id']}.")
+        return compiled_results
+
+class TaskManager:
+    @staticmethod
+    def validate_code(code):
+        try:
+            ast.parse(code)
+            logging.info("Code validation successful.")
+            return True, "Code is syntactically correct."
+        except SyntaxError as e:
+            logging.error(f"Code validation failed: {e}")
+            return False, str(e)
+
+    @staticmethod
+    def execute_code(code):
+        try:
+            exec(code)
+            logging.info("Code executed successfully.")
+            return True, "Code executed successfully."
         except Exception as e:
-            return False, f"Testing error: {e}"
+            logging.error(f"Code execution failed: {e}")
+            return False, str(e)
 
-class AlgoDeveloper:
-    def __init__(self, openai_handler, algo_tester):
-        self.openai_handler = openai_handler
-        self.algo_tester = algo_tester
-
-    def develop_algo(self, algo_code=None):
-        """Develop an algorithm with iterative refinement based on testing feedback."""
-        system_content = "System request for algorithm development."
-        user_content = f"Idea: {idea}. Develop an initial algorithm."
-
-        if not algo_code:
-            success, response = self.openai_handler.get_response_with_message(system_content, user_content)
-            if success:
-                algo_code = response
-            else:
-                logging.error("Failed to generate initial algorithm.")
-                return None
-
-        for iteration in range(5):  # Limited number of iterations for refinement
-            success, feedback = self.algo_tester.test_algo(algo_code)
-            if success:
-                logging.info("Algorithm passed testing.")
-                break
-            else:
-                # Refine based on feedback
-                logging.info(f"Refining based on feedback: {feedback}")
-                _, algo_code = self.openai_handler.get_response_with_message(system_content, feedback, algo_code)
-
-        return algo_code
-
-def main():
-    logging.basicConfig(level=logging.INFO)
-    openai_handler = OpenAIHandler()
-    algo_tester = AlgoTester(openai_handler)
-    algo_developer = AlgoDeveloper(openai_handler, algo_tester)
-
-    algo_code = ""
-    for iteration in range(10):  # Example iteration count for development
-        logging.info(f"Iteration {iteration+1}: Algorithm development cycle.")
-        algo_code = algo_developer.develop_algo(algo_code)
-        if algo_code is None:
-            logging.error("Stopping due to a critical failure in algorithm development.")
-            break
-
-        # Example: Save the current version of the algorithm
-        logging.info("Algorithm development successful for this iteration.")
-
-    logging.info("Algorithm development process completed.")
+    @staticmethod
+    def format_results(compiled_results):
+        formatted_result = ""
+        for task_id, results in compiled_results.items():
+            formatted_result += f"Task ID: {task_id}\n"
+            for result in results:
+                formatted_result += f"Agent ID: {result['agent_id']}, Response: {result['response']}\n"
+        logging.info("Results formatted successfully.")
+        return formatted_result
 
 if __name__ == "__main__":
-    main()
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    collaborative_ai = CollaborativeAI()
+
+    initial_task_description = "Develop a Python-based solution for analyzing and predicting stock market trends using historical data and machine learning models."
+    logging.info("Starting task delegation process.")
+    delegated_results = collaborative_ai.delegate_tasks(initial_task_description)
+    compiled_results = collaborative_ai.compile_results(delegated_results)
+
+    logging.info("Starting code validation and execution process.")
+    for task_id, results in compiled_results.items():
+        for result in results:
+            valid, validation_message = TaskManager.validate_code(result['response'])
+            if valid:
+                exec_status, exec_message = TaskManager.execute_code(result['response'])
+                logging.info(f"Execution Status for Task ID {task_id}, Agent ID {result['agent_id']}: {exec_message}")
+            else:
+                logging.error(f"Validation Error for Task ID {task_id}, Agent ID {result['agent_id']}: {validation_message}")
+
+    formatted_result = TaskManager.format_results(compiled_results)
+    logging.info(f"Final Compiled Task Results:\n{formatted_result}")
