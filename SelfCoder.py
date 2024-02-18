@@ -7,7 +7,7 @@ import re
 import json
 from openai import OpenAI
 import black
-idea = "Create an automated openai game creating AI, use chat.completions and not completions v1, use gpt3.5 turbo, dalle2, whisper, tts"
+idea = "Create an AI based videogame that a user can play against an AI npc"
 
 gpt4 = "gpt-4-0125-preview"
 gpt3 = "gpt-3.5-turbo-0125"
@@ -38,7 +38,7 @@ class OpenAIHandler:
             {"role": "assistant", "content": f"The current time is {time}, which has changed the AI scene since your last update."},
             {"role": "user", "content": "What are the proper message role types for openai api calls? "},
             {"role": "assistant", "content": "The proper message role types are: system, user, assistant."},
-            {"role": "user", "content": """
+            {"role": "assistant", "content": """ Example script possible usage below of openai:
                     import subprocess
                     import logging
                     import sys
@@ -89,7 +89,7 @@ class OpenAIHandler:
                             logging.error(f"Failed to get response without 'path_to_your_dataset' after {max_retries} retries")
                             return None
              """},
-            {"role": "user", "content": user_content}
+            {"role": "user", "content": user_content+idea}
         ]
         if assistant_content:
             messages.append({"role": "assistant", "content": assistant_content})
@@ -316,7 +316,7 @@ class AlgoTester:
                 stderr=subprocess.PIPE,
                 text=True
             )
-            stdout, stderr = test_process.communicate(timeout=5)
+            stdout, stderr = test_process.communicate(timeout=30)
             warnings, critical_errors = self.parse_errors(stderr)
 
             if critical_errors:
