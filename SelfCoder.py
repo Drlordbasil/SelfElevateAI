@@ -6,20 +6,89 @@ import ast
 import re
 import json
 from openai import OpenAI
+import black
+idea = "Create an automated openai game creating AI, use chat.completions and not completions v1, use gpt3.5 turbo, dalle2, whisper, tts"
 
-idea = "create a NN based pygame that a user can play against an AI npc"
 gpt4 = "gpt-4-0125-preview"
 gpt3 = "gpt-3.5-turbo-0125"
-ft3 = "ft:gpt-3.5-turbo-1106:personal::8tGk0TIP" # added a fine-tuned model for proper openai usage(updated by fine-tuning on latest api usage
+ft3 = "ft:gpt-3.5-turbo-1106:personal::8tGk0TIP"
+
 class OpenAIHandler:
-    def __init__(self, model=gpt3):
+    def __init__(self, model=gpt4):
         self.client = OpenAI()
         self.model = model
+
 
     def get_response_with_message(self, system_content, user_content, assistant_content=None):
         # Create structured messages
         messages = [
+            {"role": "system", "content": f"you are a python programming AI.You specialize in coding the latest openai library. Current time is {time}, which has changed the AI scene since your last update.You can install the OpenAI python package using pip, but you import it using 'from openai import OpenAI'.You can use the 'chat.completions.create' method to create a chat completion.The current models are gpt-4-0125-preview, gpt-3.5-turbo-0125, ft:gpt-3.5-turbo-1106:personal::8tGk0TIP, gpt-3.5-turbo,gpt-4.You can initialize the OpenAI python package using 'client = OpenAI()'. No need to set api_key as it pulls direct from environment variables."},
             {"role": "system", "content": system_content},
+            {"role": "user", "content": "What is the proper way to import the latest OpenAI python package? "},
+            {"role": "assistant", "content": "You can install the OpenAI python package using pip, but you import it using 'from openai import OpenAI'."},
+            {"role": "user", "content": "How do I use the OpenAI python package to create a chat completion?"},
+            {"role": "assistant", "content": "You can use the 'chat.completions.create' method to create a chat completion."},
+            {"role": "user", "content": "What is the proper way to initialize the OpenAI python package?"},
+            {"role": "assistant", "content": "You can initialize the OpenAI python package using 'client = OpenAI()'. No need to set api_key as it pulls direct from environment variables."},
+            {"role": "user", "content": "What are the current openai usage v2 chat completion models?? "},
+            {"role": "assistant", "content": "The current models are gpt-4-0125-preview, gpt-3.5-turbo-0125, ft:gpt-3.5-turbo-1106:personal::8tGk0TIP, gpt-3.5-turbo,gpt-4."},
+            {"role": "user", "content": "NEVER USE: response['choices'][0]['message']['content'], only use: response.choices[0].message.content.  "},
+            {"role": "assistant", "content": "You should never use: response['choices'][0]['message']['content'], only use: response.choices[0].message.content."},
+            {"role": "user", "content": "What is the current time? "},
+            {"role": "assistant", "content": f"The current time is {time}, which has changed the AI scene since your last update."},
+            {"role": "user", "content": "What are the proper message role types for openai api calls? "},
+            {"role": "assistant", "content": "The proper message role types are: system, user, assistant."},
+            {"role": "user", "content": """
+                    import subprocess
+                    import logging
+                    import sys
+                    import time
+                    import ast
+                    import re
+                    import json
+                    from openai import OpenAI
+
+                    idea = "create a NN based pygame that a user can play against an AI npc"
+                    gpt4 = "gpt-4-0125-preview"
+                    gpt3 = "gpt-3.5-turbo-0125"
+                    ft3 = "ft:gpt-3.5-turbo-1106:personal::8tGk0TIP" # added a fine-tuned model for proper openai usage(updated by fine-tuning on latest api usage
+                    class OpenAIHandler:
+                        def __init__(self, model=gpt3):
+                            self.client = OpenAI()
+                            self.model = model
+
+                        def get_response_with_message(self, system_content, user_content, assistant_content=None):
+                            # Create structured messages
+                            messages = [
+                                {"role": "system", "content": system_content},
+                                {"role": "user", "content": user_content}
+                            ]
+                            if assistant_content:
+                                messages.append({"role": "assistant", "content": assistant_content})
+
+                            # Attempt to get a response using the structured messages
+                            max_retries = 3
+                            for retry_count in range(max_retries):
+                                try:
+                                    completion = self.client.chat.completions.create(
+                                        model=self.model,
+                                        temperature=0.3,
+                                        messages=messages
+                                    )
+                                    response_content = completion.choices[0].message.content
+                                    self.log_response(response_content)
+
+                                    if not self.should_retry(response_content):
+                                        return response_content
+                                    self.log_retry_attempt(retry_count + 1, max_retries)
+                                    time.sleep(10)  # Re-evaluate the necessity of this delay
+
+                                except Exception as e:
+                                    logging.error(f"Failed to get response from OpenAI: {e}")
+                                    return None
+                            logging.error(f"Failed to get response without 'path_to_your_dataset' after {max_retries} retries")
+                            return None
+             """},
             {"role": "user", "content": user_content}
         ]
         if assistant_content:
@@ -66,9 +135,7 @@ class OpenAIHandler:
 
 
 
-'''
-note: Im not sure what im going to do with the collab class yet. 
-'''
+
 
 class CollaborativeAgent:
     def __init__(self, openai_handler):
@@ -91,7 +158,8 @@ class CollaborativeAgent:
             response = self.openai_handler.get_response_with_message(system_message, user_message)
 
             if response:
-
+                # Assuming the response can directly be used as the next round's user_message.
+                # Modify this as necessary to fit the response format and requirements.
                 current_task['user_content'] = response
             else:
                 logging.error("Failed to obtain a response for the current collaboration round.")
@@ -145,7 +213,7 @@ class AlgoDeveloper:
     def _generate_follow_up_prompt(self, historical_data, error_message):
         common_errors, recent_feedback = self._analyze_historical_data(historical_data)
         feedback_points = ", ".join(common_errors) if common_errors else "None"
-        system_message = f"Refine the script by addressing common errors: {feedback_points} and incorporating feedback: {recent_feedback}."
+        system_message = f"Refine the script by addressing common errors: {feedback_points} and incorporating feedback: {recent_feedback}. The idea originally is{idea}"
         user_message = "Improve the existing script by correcting errors and enhancing functionality based on the following feedback:" + (f" {error_message}" if error_message else "")
         return system_message, user_message
 
@@ -201,11 +269,11 @@ class AlgoTester:
         self.openai_handler = openai_handler
 
     def get_openai_suggestion(self, code, output):
-        prompt = f"[never include placeholder filenames or placeholders like 'pass' in python]Review and improve the following Python code with a fine toothed comb, so to speak, while improving its classes and its output of either productivity and/or more profitable means and/or cheaper costs to run, then provide real improvements to the code:\n\nCode:\n{code}\n\nOutput:\n{output}\n\nNew Script:"
+        prompt = f"The idea originally is{idea}\n[never include placeholder filenames or placeholders like 'pass' in python]Review and improve the following Python code with a fine toothed comb, so to speak, while improving its classes and its output of either productivity and/or more profitable means and/or cheaper costs to run, then provide real improvements to the code:\n\nCode:\n{code}\n\nOutput:\n{output}\n\nNew Script:"
         system_message = """
         You are a Debugger that sends a revised python script to another AI for running local testing in cmd prompt subprocess and will get an output, ensure the logging is verbose and robust. You are to improve at least 3 functionings and complete the todo list.
         ```python
-        # Your Python code here
+        # Your Python code here(ensure the python code just runs and closes after it launches properly, if not it will return an incorrect timeout error)
         ``
         #####TODO LIST YOU NEED TO DO NEXT ITERATION #################################
         1. <your todo list based on dynamically thinking about step you are on>
@@ -248,7 +316,7 @@ class AlgoTester:
                 stderr=subprocess.PIPE,
                 text=True
             )
-            stdout, stderr = test_process.communicate(timeout=90)
+            stdout, stderr = test_process.communicate(timeout=5)
             warnings, critical_errors = self.parse_errors(stderr)
 
             if critical_errors:
@@ -320,7 +388,7 @@ class CodingUtils:
     @staticmethod
     def format_python_code(code):
         try:
-            import black
+            
             formatted_code = black.format_str(code, mode=black.FileMode())
             return True, formatted_code
         except Exception as e:
@@ -376,7 +444,7 @@ if __name__ == "__main__":
 
     initial_script = ""
     algo_code = initial_script
-    max_iterations = 20
+    max_iterations = 4
     error_message = None
     performance_metrics = {}
     conversation_history = []
