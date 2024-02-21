@@ -1,254 +1,215 @@
-import time
-from openai import OpenAI
-import threading
-import logging
-import pyttsx3
-import re
-import ast
-import black
 import subprocess
-import json
-engine = pyttsx3.init()
-engine.setProperty('rate', 130)
-engine.say("I will speak this text")
-# Initialize logging
+import tempfile
+import os
+import logging
+from openai import OpenAI
+import ast
+
+
+
+logging.basicConfig(level=logging.INFO)
+
+
 gpt4 = "gpt-4-0125-preview"
 gpt3 = "gpt-3.5-turbo-0125"
 ft3 = "ft:gpt-3.5-turbo-1106:personal::8uLu2E19"
 model = gpt3
 smartmodel = gpt4
-logging.basicConfig(level=logging.INFO)
-class FileManager:
-    @staticmethod
-    def save_script(filename, content):
-        with open(filename, 'w') as file:
-            file.write(content)
-            logging.info(f"Algorithm script saved to {filename} successfully.")
+idea_prompt = """
+Generate a profitable Python program idea with zero startup and upkeep costs that can be developed in 1 file. 
+The program should be able to run on any computer with Python installed and should make profit in a reasonable amount of time. 
+use openai calls to create complex outputs that are not easily understood by humans but provide valuable profitable outputs.
+we need to make an autonomous agent specefic to a certain niche that can output profitable content.
+We need to use this to describe the new openai api calls:
+from openai import OpenAI
 
-    @staticmethod
-    def save_conversation_dataset(filename, conversation_history):
-        with open(filename, 'w') as file:
-            for entry in conversation_history:
-                formatted_entry = {
-                    "messages": [
-                        {"role": "system", "content": entry.get("system_message", "")},
-                        {"role": "user", "content": entry.get("user_message", "")},
-                        {"role": "assistant", "content": entry.get("assistant_message", "")}
-                    ]
-                }
-                file.write(json.dumps(formatted_entry) + '\n')
-            logging.info(f"Conversation history saved to {filename} successfully.")
-
-    @staticmethod
-    def log_iteration_data(filename, iteration_data):
-        with open(filename, 'a') as file:
-            file.write(json.dumps(iteration_data) + '\n')
-            logging.info(f"Iteration data logged to {filename} successfully.")
-
-    @staticmethod
-    def get_historical_data(filename):
-        historical_data = []
-        try:
-            with open(filename, 'r') as file:
-                for line in file:
-                    historical_data.append(json.loads(line))
-            return historical_data
-        except FileNotFoundError:
-            logging.warning(f"No historical data found in {filename}.")
-            return []
-
-class CodingUtils:
-    @staticmethod
-    def remove_comments(code):
-        new_lines = []
-        lines = code.split('\n')
-        for line in lines:
-            if not line.strip().startswith("#"):
-                if '#' in line:
-                    line = line.split('#', 1)[0]
-                new_lines.append(line)
-        return '\n'.join(new_lines)
-
-    @staticmethod
-    def is_code_valid(code):
-        try:
-            ast.parse(code)
-            logging.info("Python code validation passed.")
-            return True
-        except (SyntaxError, IndentationError) as e:
-            logging.error(f"Syntax error in the generated code: {e}")
-            return False
-
-    @staticmethod
-    def extract_python_code(markdown_text):
-        pattern = r"```python\n(.*?)```"
-        matches = re.findall(pattern, markdown_text, re.DOTALL)
-        if not matches:
-            logging.warning("No Python code blocks found in the Markdown text.")
-            return ""
-        python_code_blocks = [match.strip() for match in matches]
-        if len(python_code_blocks) > 1:
-            logging.info("Multiple Python code blocks found. Returning the first block.")
-        clean_code = CodingUtils.remove_comments(python_code_blocks[0])
-        return clean_code
-
-    @staticmethod
-    def format_python_code(code):
-        try:
-            
-            formatted_code = black.format_str(code, mode=black.FileMode())
-            return True, formatted_code
-        except Exception as e:
-            logging.error(f"Error formatting Python code: {e}")
-            return False, str(e)
-class ConversationManager:
     def __init__(self):
-        
+        self.conversation_memory = []
+        self.client = OpenAI() # never add api_key here
+        self.project_idea = ""
+        self.project_code = ""
+
+    def generate_response(self, model_type, prompt, system_message=""):
+        messages = [{"role": "system", "content": system_message}, {"role": "user", "content": prompt}]
+        response = self.client.chat.completions.create(model=model_type, messages=messages)
+        content = response.choices[0].message.content
+        logging.info(f"Response: {content}")
+        return content
+make sure your idea is robust and profitable. If I can sell the output content such as programs it creates or content like full chapterbooks to sell online or anything else like that.
+"""
+code_prompt = """
+Develop Python code for the following idea. Please note, do not include placeholders such as 'pass' in the Python code. The code should follow this structure:
+
+```python
+# Import necessary libraries
+import os
+import sys
+
+# Define necessary classes
+class MyClass:
+    def __init__(self, param1, param2):
+        self.param1 = param1
+        self.param2 = param2
+
+    def method1(self):
+        # Implement method1
+        pass
+
+    def method2(self):
+        # Implement method2
+        pass
+
+# Define main function
+def main():
+    # Create an instance of MyClass
+    my_class = MyClass('param1', 'param2')
+
+    # Call methods of MyClass
+    my_class.method1()
+    my_class.method2()
+
+# Call the main function
+if __name__ == "__main__":
+    main()
+```
+proper openai calls that you cant change if using openai:
+from openai import OpenAI
+    gpt4 = "gpt-4-0125-preview"
+    gpt3 = "gpt-3.5-turbo-0125" # good model for testing purposes.
+    def __init__(self):
+        self.conversation_memory = []
+        self.client = OpenAI() # never add api_key here
+        self.project_idea = ""
+        self.project_code = ""
+
+    def generate_response(self, model_type, prompt, system_message=""):
+        messages = [{"role": "system", "content": system_message}, {"role": "user", "content": prompt}]
+        response = self.client.chat.completions.create(model=model_type, messages=messages)
+        content = response.choices[0].message.content
+        logging.info(f"Response: {content}")
+        return content
+never change these openai core functions(they are even case-sensative, dont include models I didnt list) while improving the programs extended functionalities for automation of content creation. All outputs from your program must directly profit with content creation or other means of profit where the user can sell the output like program code, stories, images, ect.
+"""
+class CodeExecutor:
+    '''
+    Class to execute Python code and return the output.
+    This class is used to execute Python code and return the output. It uses the subprocess module to run the code in a separate process and capture the output. 
+    The code is written to a temporary file and then executed using the Python interpreter. 
+    The output is then returned to the caller. If there is an error, an exception is raised and the error message is returned.
+    The temporary file is then deleted.
+    the flow of the code is as follows:
+    1. Write the code to a temporary file
+    2. Execute the code using the Python interpreter
+    3. Capture the output and return it to the caller
+    4. If there is an error, raise an exception and return the error message
+    5. Delete the temporary file
+    
+    '''
+    @staticmethod
+    def execute_python_code(code, input_simulation=""):
+        with tempfile.NamedTemporaryFile(suffix=".py", delete=False) as tmp:
+            tmp.write(code.encode())
+            tmp_name = tmp.name
+        try:
+            result = subprocess.run(['python', tmp_name], input=input_simulation.encode(), capture_output=True, text=True, timeout=30)
+            output = result.stdout
+            error = result.stderr
+            if error:
+                raise Exception(error)
+            return output
+        except Exception as e:
+            return f"Error executing Python code: {e}"
+        finally:
+            os.remove(tmp_name)
+    def save_code(self, code, filename):
+        with open(filename, "w") as file:
+            file.write(code)    
+        print(f"Code saved to {filename}")
+    def read_code(self, filename):
+        with open(filename, "r") as file:
+            code = file.read()
+        print(f"Code read from {filename}")
+        return code
+    def execute_code(self, code, input_simulation=""):
+        result = subprocess.run(['python', code], input=input_simulation.encode(), capture_output=True, text=True, timeout=30)
+        output = result.stdout
+        error = result.stderr
+        if error:
+            raise Exception(error)
+        return output
+
+    
+
+class ConversationManager:
+    '''
+    this class is used to manage the conversation and development process.
+    It uses the OpenAI API to generate responses and execute the code.
+    The conversation is managed in a loop, with the initial idea generation, code development, and iterative refinement.
+    steps in process are:
+    1. Initial idea generation
+    2. Development of the project
+    3. Iterative refinement and completion check
+    4. Execute and test the generated code
+    5. Further refine the code based on feedback
+    6. Finalize the project
+    7. Output the final project code
+    8. Log the conversation and development process
+
+    '''
+    def __init__(self):
         self.conversation_memory = []
         self.client = OpenAI()
-    def gen_openai(self, prompt):
-        system_message = """
-        You are a superintelligent AI model designed to interact with another AI model with the same capabilities as you. You will dicuss how to improve python programs and always include robust logic
-"""
-        
-        response = self.client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": system_message},
-                {"role": "user", "content": "Response must inlcude full robust python code."+prompt}
-            ]
-        )
-        print(response.choices[0].message.content)
-        return response.choices[0].message.content
+        self.project_idea = ""
+        self.project_code = ""
 
-    def gen_summary(self, prompt):
-        system_message = """You are a superintelligent AI model designed to interact with another AI model with the same capabilities as you. You will dicuss how to improve python programs and always include robust logic"""
+    def generate_response(self, model_type, prompt, system_message=""):
+        messages = [{"role": "system", "content": system_message}, {"role": "user", "content": prompt}]
+        response = self.client.chat.completions.create(model=model_type, messages=messages)
+        content = response.choices[0].message.content
+        logging.info(f"Response: {content}")
+        return content
+
+    def extract_valid_python_code(self, response):
+        """Extracts valid Python code from the response."""
+        try:
+            ast.parse(response)
+            return response
+        except SyntaxError:
+            return ""
+
+    def iterate_development(self):
+        self.project_idea = self.generate_response(smartmodel, idea_prompt, "Generating extremely real profitable project idea that an LLM can create in one response...")
+        self.project_code = self.generate_response(smartmodel, code_prompt+f"{self.project_idea}", "Developing project code(full robust verbose complex logic without placeholders)...I am a python programming superstar")
         
-        response = self.client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": system_message},
-                {"role": "user", "content": "Response must inlcude full robust python code."+prompt}
-            ]
-        )
-        print("++++++++++++++++++++++++++++++++++++++++++++++")
-        print(response.choices[0].message.content)
-        print("++++++++++++++++++++++++++++++++++++++++++++++")
-        return response.choices[0].message.content
-    
-    def gen_fred(self, prompt):
-        system_message = """ 
-        Your role is to provide prompts that are sufficiently clear, concise, and direct to ensure a response from another AI model.
-        Response must inlcude full robust python code.
-        The objective is to engage in a coherent and meaningful dialogue where both AI models contribute to the conversation. when you code, ensure '''python <code> ''' format for easy code extraction purpose, make sure to include a header in each file like # main.py with the name of the file. IMPORTANT: if you are done, just say quit."""
-        
-        response = self.client.chat.completions.create(
-            model=smartmodel,
-            messages=[
-                {"role": "system", "content": system_message},
-                {"role": "user", "content": prompt+"Response must inlcude full robust python code."}
-            ]
-        )
-        print("++++++++++++++++++++++++++++++++++++++++++++++")
-        print(response.choices[0].message.content)
-        print("++++++++++++++++++++++++++++++++++++++++++++++")
-        return response.choices[0].message.content
-        
-    def openai_thread(self):
-        while True:
-            gpt4all_done.wait(timeout=120)  # Wait up to 120 seconds for GPT4All
-            gpt4all_done.clear()
+        completion = "no"
+        iteration = 0
+        while completion == "no":
+            execution_result = CodeExecutor.execute_python_code(self.project_code)
+            feedback = self.generate_response(smartmodel, f"Execution result: {execution_result}\nIs the program complete and profitable either directly or indirectly using the original idea of {self.project_idea}? Answer yes or no.", "Evaluating program completion...")
             
-            prompt = self.conversation_memory[-1] if self.conversation_memory else "Starting the conversation."
-            summary = self.gen_summary(prompt)
-            engine.say(summary)           
-            if prompt.strip():  # Ensure prompt is not empty
-                response = self.gen_openai(prompt)
-
-
-                logging.info(f"OpenAI: {response}")
-                self.conversation_memory.append('response from Jeff:'+response)
-                
-                openai_done.set()
-                if response.lower() == 'quit':
-                    break
+            if "yes" in feedback.lower():
+                CodeExecutor.save_code(self.project_code, f"project_{iteration}.py")
+                completion = "yes"
+                logging.info("Project deemed complete and potentially profitable.")
             else:
-                logging.warning("Waiting for a valid response from GPT4All...")
-    
-    def fred_thread(self):
-        while True:
-            openai_done.wait()
-            openai_done.clear()
-            
-            last_openai_message = self.conversation_memory[-1] if self.conversation_memory else "Starting the conversation."
-            prompt = f"{last_openai_message}\n\nYour task is to comprehend the context and provide an elaborate response that addresses the user's query in detail. Please ensure that your reply is both accurate and informative. when you code, ensure '''python <code> ''' format for easy code extraction purpose, make sure to include a header in each file like # main.py with the name of the file."
-            
-            response = self.gen_fred(prompt)
-            summary = self.gen_summary(response)
-            engine.say(summary)
-            time.sleep(10)
-            if response.strip():  # Ensure response is not empty
-                logging.info(f"Jeff: {response}")
-                self.conversation_memory.append('Response from Jeff:'+response)
-                code = CodingUtils.extract_python_code(response)
-                if code:
-                    is_valid = CodingUtils.is_code_valid(code)
-                    if is_valid:
-                        success, formatted_code = CodingUtils.format_python_code(code)
-                        if success:
-                            logging.info("Python code formatting successful.")
-                            save_path = "main.py"
-                            with open(save_path, "w") as file:
-                                file.write(formatted_code)
-                            print("python file saved as main.py")
+                # Further refine the code based on feedback
+                CodeExecutor.save_code(self.project_code, f"project_{iteration}.py")
+                refined_code = self.generate_response(smartmodel, f"Refine the Python code to ensure profitability and completion.{self.project_code} as it was rejected by another AI", "Refining project code to meet acedemic standards and beyond...")
+                valid_code = self.extract_valid_python_code(refined_code)
+                if valid_code:
+                    self.project_code = valid_code
+                    CodeExecutor.save_code(self.project_code, f"project_{iteration}.py")
+                    print(f"Refined code saved to project_{iteration}.py")
+                    iteration += 1
+    def conversation_thread(self):
+        self.iterate_development()
+        if self.project_code:
+            logging.info("Final Project Code:\n" + self.project_code)
+        else:
+            logging.warning("Failed to develop a profitable project.")
 
-                            #subprocess.run(["python", "main.py"])
-                            #logging.info(f"Formatted Python code:\n{formatted_code}")
-                        else:
-                            logging.error(f"Failed to format Python code: {formatted_code}")
-                    else:
-                        logging.error("Invalid Python code detected. Skipping formatting.")
-                gpt4all_done.set()
-                
-            else:
-                logging.warning("GPT4All did not generate a valid response. Retrying...")
-                
-            
-            if response.lower() == 'quit':
-                break
-
-# Synchronization Events
-openai_done = threading.Event()
-gpt4all_done = threading.Event()
-
-# Initialize ConversationManager and threads
+# Initialize ConversationManager
 manager = ConversationManager()
-thread1 = threading.Thread(target=manager.openai_thread)
-thread2 = threading.Thread(target=manager.fred_thread)
 
-# Initial prompt
-initial_prompt = """
-Let us create a new algorithm in python(never created and useful while being creative and helpful in real human life or health extending.
- We can use this template as our skeleton start without any meaningful code to actually just use as a structure only:
-```python
-class example_class:
-<docstrings>
-    def __init__(self):
-    <actual logic>
-    return 0
-
-    def sample(self):
-    <actual logic>
-    return 0
-```
-"""
-manager.conversation_memory.append(initial_prompt)
-gpt4all_done.set()
-
-# Start threads
-thread1.start()
-thread2.start()
-
-# Wait for both threads to finish
-thread1.join()
-thread2.join()
+# Run the development process
+manager.conversation_thread()
